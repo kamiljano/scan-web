@@ -1,0 +1,21 @@
+{
+  "name": "scan-ips",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "bun src/index.ts",
+    "test": "vitest run tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "ipterate": "file:/Users/kamil.janowski/workspace/ipterate",
+    "promise-queue": "^2.2.5"
+  },
+  "devDependencies": {
+    "@types/promise-queue": "^2.2.3",
+    "prettier": "^3.3.2",
+    "vitest": "^1.6.0"
+  }
+}
