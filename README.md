@@ -22,7 +22,7 @@ npm run build
 3. Run the application
 
 ```bash
-node --max-old-space-size=8192 dist/src/index.js scan -c websiteExists -f 1.0.0.0 -t 1.255.255.255
+node dist/src/index.js scan -c websiteExists -f 1.0.0.0 -t 1.255.255.255
 ```
 
 Run `node dist/src/index.js scan --help` for more parameters.

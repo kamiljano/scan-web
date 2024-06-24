@@ -19,10 +19,12 @@ const getWorkerPath = () => {
   return result;
 };
 
+type MemoryControl = (action: "pause" | "resume") => void;
+
 const generateIps = (
   from: string,
   to: string,
-  onIp: (ip: string) => void | Promise<void>,
+  onIp: (ip: string, memoryControl: MemoryControl) => void | Promise<void>,
 ) =>
   new Promise<void>((resolve, reject) => {
     const ipWorker = new Worker(getWorkerPath(), {
@@ -32,8 +34,14 @@ const generateIps = (
       },
     });
 
+    const memoryControl: MemoryControl = (action) => {
+      ipWorker.postMessage({
+        pause: action === "pause",
+      });
+    };
+
     ipWorker.on("message", (ip: string) => {
-      onIp(ip);
+      onIp(ip, memoryControl);
     });
 
     ipWorker.once("exit", () => {
@@ -62,7 +70,9 @@ export default async function scan(props: ScanProps): Promise<void> {
 
   let lastEtaUpdate: number | undefined = undefined;
 
-  await generateIps(from, to, (ip) => {
+  let paused = false;
+
+  await generateIps(from, to, (ip, memoryControl) => {
     numberOfIps++;
 
     request(ip, props.checks)
@@ -87,6 +97,20 @@ export default async function scan(props: ScanProps): Promise<void> {
       })
       .finally(() => {
         numberOfProcessedIps++;
+
+        const diffBetweenQueuedAndProcessed =
+          numberOfIps - numberOfProcessedIps;
+
+        if (!paused && diffBetweenQueuedAndProcessed > 1000) {
+          memoryControl("pause");
+          paused = true;
+          console.log("Thread throttling issued");
+        } else if (paused && diffBetweenQueuedAndProcessed < 100) {
+          memoryControl("resume");
+          paused = false;
+          console.log("Thread resume issued");
+        }
+
         if (numberOfProcessedIps % 1000 === 0) {
           const data = eta.get(numberOfProcessedIps);
           let lastEtaUpdateLabel: string = "";
