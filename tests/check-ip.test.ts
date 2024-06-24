@@ -10,18 +10,7 @@ import {
   expect,
 } from "vitest";
 import { request } from "../src/check-ip";
-import { CheckerMap, checkerMap } from "../src/checkers";
 import { CheckerValidation } from "../src/checkers/checker";
-
-const originalCheckerMap = { ...checkerMap };
-
-const setCheckerMap = (map: CheckerMap) => {
-  const keys = Object.keys(checkerMap);
-  for (const key of keys) {
-    delete checkerMap[key];
-  }
-  Object.assign(checkerMap, map);
-};
 
 const successChecker: CheckerValidation = async (ctx) => {
   return {
@@ -39,14 +28,27 @@ const failureChecker: CheckerValidation = async () => {
 };
 
 describe("check-ip", () => {
-  beforeAll(() => {
-    setCheckerMap({
-      "": [failureChecker, successChecker],
-    });
-  });
+  describe("with real request", () => {
+    test("should execute the requests and execute the checkers", async () => {
+      const result = await request("google.com", {
+        "": [failureChecker, successChecker],
+      });
 
-  afterAll(() => {
-    setCheckerMap(originalCheckerMap);
+      expect(result).toEqual([
+        {
+          checker: "successChecker",
+          meta: {
+            url: "http://google.com/",
+          },
+        },
+        {
+          checker: "successChecker",
+          meta: {
+            url: "https://google.com/",
+          },
+        },
+      ]);
+    });
   });
 
   describe("with mock request", () => {
@@ -78,7 +80,9 @@ describe("check-ip", () => {
     });
 
     test("should execute the requests and execute the checkers", async () => {
-      const result = await request("127.0.0.1");
+      const result = await request("127.0.0.1", {
+        "": [failureChecker, successChecker],
+      });
 
       expect(fetch).toHaveBeenCalledTimes(2);
       const fetchedUrls = fetch.mock.calls.map((call) => call[0]);
@@ -90,27 +94,6 @@ describe("check-ip", () => {
           checker: "successChecker",
           meta: {
             url: "https://127.0.0.1/",
-          },
-        },
-      ]);
-    });
-  });
-
-  describe("with real request", () => {
-    test("should execute the requests and execute the checkers", async () => {
-      const result = await request("google.com");
-
-      expect(result).toEqual([
-        {
-          checker: "successChecker",
-          meta: {
-            url: "http://google.com/",
-          },
-        },
-        {
-          checker: "successChecker",
-          meta: {
-            url: "https://google.com/",
           },
         },
       ]);

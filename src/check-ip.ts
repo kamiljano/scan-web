@@ -3,7 +3,7 @@ import {
   CheckerResult,
   CheckerValidation,
 } from "./checkers/checker";
-import { checkerMap } from "./checkers";
+import { CheckerMap } from "./checkers";
 
 interface CheckResult<TResult extends CheckerResult = CheckerResult> {
   result: TResult;
@@ -47,7 +47,7 @@ const check = async (url: string, checkers: CheckerValidation[]) => {
     );
 };
 
-export const request = async (ip: string) => {
+export const request = async (ip: string, checkerMap: CheckerMap) => {
   const controller = new AbortController();
   setTimeout(() => controller.abort(), 2000);
 

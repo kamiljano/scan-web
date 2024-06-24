@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import { CheckerMap, checkerMap } from "./checkers";
 import scan from "./scan";
+import { stores } from "./store";
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -70,13 +71,41 @@ yargs(process.argv.slice(2))
             .flat()
             .map((c) => c.name),
         },
+        store: {
+          alias: "s",
+          describe: "The store to use for storing the results",
+          default: "sqlite://./db.sqlite",
+          coerce(val: string | string[]) {
+            const storeConfigs = Array.isArray(val) ? val : [val];
+
+            return Promise.all(
+              storeConfigs.map(async (storeConfig) => {
+                const [storeName, param] = storeConfig.split("://");
+                const storeCreator = stores[storeName];
+
+                if (!storeCreator) {
+                  throw new Error(`The store ${storeName} is not available`);
+                }
+
+                const store = storeCreator(param);
+
+                if (store.init) {
+                  await store.init();
+                }
+
+                return store;
+              }),
+            );
+          },
+        },
       });
     },
-    (args) => {
+    async (args) => {
       return scan({
         from: args.from,
         to: args.to,
         checks: toCheckerMap(args.check),
+        stores: (await args.store) ?? [],
       });
     },
   )

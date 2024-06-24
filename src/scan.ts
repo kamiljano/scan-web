@@ -3,11 +3,10 @@ import * as path from "node:path";
 import * as console from "node:console";
 import { ipv4ToNumber } from "ipterate";
 import { request } from "./check-ip";
-import Queue from "promise-queue";
-import { setTimeout } from "node:timers/promises";
 import { startEta } from "./eta";
 import { Duration } from "luxon";
 import { CheckerMap } from "./checkers";
+import { Store } from "./store/store";
 
 const generateIps = (
   from: string,
@@ -38,40 +37,44 @@ const generateIps = (
     });
   });
 
-const waitForEmptyQueue = async (queue: Queue) => {
-  while (queue.getQueueLength()) {
-    await setTimeout(1000);
-  }
-};
-
 interface ScanProps {
   from: string;
   to: string;
   checks: CheckerMap;
+  stores: Store[];
 }
 
 export default async function scan(props: ScanProps): Promise<void> {
   let numberOfIps = 0;
   let numberOfProcessedIps = 0;
 
-  const from = "0.0.0.0";
-  const to = "255.255.255.255";
+  const from = props.from;
+  const to = props.to;
   const eta = startEta(ipv4ToNumber(to) - ipv4ToNumber(from));
-
-  const queue = new Queue(1000);
 
   let lastEtaUpdate: number | undefined = undefined;
 
   await generateIps(from, to, (ip) => {
     numberOfIps++;
 
-    // queue
-    //   .add(() => request(ip))
-    request(ip)
-      .then((result) => {
+    request(ip, props.checks)
+      .then(async (result) => {
         if (result.length) {
           console.log(`Check passed: ${JSON.stringify(result)}`);
           console.log(result);
+
+          await Promise.all(
+            props.stores.flatMap(async (store) => {
+              return result.flatMap(async (r) => {
+                const { url, ...meta } = r.meta;
+                await store.store({
+                  url,
+                  source: r.checker,
+                  meta,
+                });
+              });
+            }),
+          );
         }
       })
       .finally(() => {
@@ -100,6 +103,5 @@ export default async function scan(props: ScanProps): Promise<void> {
       });
   });
 
-  //await waitForEmptyQueue(queue);
   console.log("Done");
 }
