@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "baseUrl": ".",
-    "noEmit": true,
+    "outDir": "dist",
     "noImplicitAny": true,
     "esModuleInterop": true,
     "alwaysStrict": true,

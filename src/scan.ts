@@ -7,6 +7,17 @@ import { startEta } from "./eta";
 import { Duration } from "luxon";
 import { CheckerMap } from "./checkers";
 import { Store } from "./store/store";
+import * as fs from "node:fs";
+
+const getWorkerPath = () => {
+  let result = path.resolve(__dirname, "generate-ips-worker.ts");
+
+  if (!fs.existsSync(result)) {
+    result = path.resolve(__dirname, "generate-ips-worker.js");
+  }
+
+  return result;
+};
 
 const generateIps = (
   from: string,
@@ -14,15 +25,12 @@ const generateIps = (
   onIp: (ip: string) => void | Promise<void>,
 ) =>
   new Promise<void>((resolve, reject) => {
-    const ipWorker = new Worker(
-      path.resolve(__dirname, "generate-ips-worker.ts"),
-      {
-        workerData: {
-          from,
-          to,
-        },
+    const ipWorker = new Worker(getWorkerPath(), {
+      workerData: {
+        from,
+        to,
       },
-    );
+    });
 
     ipWorker.on("message", (ip: string) => {
       onIp(ip);

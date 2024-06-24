@@ -2,6 +2,7 @@ import { Store, StoreValue } from "./store";
 import Database from "better-sqlite3";
 import * as fs from "node:fs";
 import { Generated, Kysely, SqliteDialect, CamelCasePlugin, sql } from "kysely";
+import * as path from "node:path";
 
 interface SiteRecord {
   id: Generated<number>;
@@ -17,9 +18,7 @@ export default class SqliteStore implements Store {
   private readonly db: Kysely<Database>;
 
   constructor(filePath: string) {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    console.log(`Creating the sqlite file in ${path.resolve(filePath)}`);
 
     const database = new Database(filePath);
 
@@ -32,6 +31,7 @@ export default class SqliteStore implements Store {
   async init() {
     await this.db.schema
       .createTable("sites")
+      .ifNotExists()
       .addColumn("id", "integer", (cb) =>
         cb.primaryKey().autoIncrement().notNull(),
       )
