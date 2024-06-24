@@ -42,5 +42,5 @@ Will produce a DB file of all websites in existence.
 ### Find all websites that contain an accidentally uploaded git repository
 
 ```shell
-node dist/src/index.js scan -c gitChecker
+node dist/src/index.js scan -c git
 ```
