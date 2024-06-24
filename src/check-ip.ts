@@ -18,7 +18,12 @@ const check = async (url: string, checkers: CheckerValidation[]) => {
     throw new Error("Failed to fetch the page");
   }
 
-  const body = new Uint8Array(await response.arrayBuffer());
+  let body: Uint8Array | undefined = undefined;
+  try {
+    body = new Uint8Array(await response.arrayBuffer());
+  } catch {
+    // ignore
+  }
 
   const result = await Promise.allSettled(
     checkers.map(async (checker): Promise<CheckResult> => {
