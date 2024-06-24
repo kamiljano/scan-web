@@ -34,7 +34,13 @@ The tool creates an SQLite database listing the IPs where a certain checker succ
 ### Find all websites that exist
 
 ```shell
-node dist/src/index.js scan  -c websiteExists
+node dist/src/index.js scan -c websiteExists
 ```
 
 Will produce a DB file of all websites in existence.
+
+### Find all websites that contain an accidentally uploaded git repository
+
+```shell
+node dist/src/index.js scan -c gitChecker
+```
