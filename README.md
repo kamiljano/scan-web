@@ -28,3 +28,13 @@ node dist/src/index.js scan -c websiteExists -f 1.0.0.0 -t 1.255.255.255
 Run `node dist/src/index.js scan --help` for more parameters.
 
 The tool creates an SQLite database listing the IPs where a certain checker succeeded
+
+## Checkers
+
+### Find all websites that exist
+
+```shell
+node dist/src/index.js scan  -c websiteExists
+```
+
+Will produce a DB file of all websites in existence.
