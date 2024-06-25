@@ -21,7 +21,7 @@ bun install
 2. Run the project
 
 ```bash
-bun run src/index.ts scan -c websiteExists -f 1.0.0.0 -t 1.255.255.255
+bun run src/index.ts scan ipv4 -c websiteExists -f 1.0.0.0 -t 1.255.255.255
 ```
 
 Run `node dist/src/index.js scan --help` for more parameters.
@@ -45,7 +45,7 @@ npm run build
 3. Run the application
 
 ```bash
-node dist/src/index.js scan -c websiteExists -f 1.0.0.0 -t 1.255.255.255
+node dist/src/index.js scan ipv4 -c websiteExists -f 1.0.0.0 -t 1.255.255.255
 ```
 
 Run `node dist/src/index.js scan --help` for more parameters.
@@ -57,7 +57,7 @@ The tool creates an SQLite database listing the IPs where a certain checker succ
 ### Find all websites that exist
 
 ```shell
-node dist/src/index.js scan -c websiteExists
+node dist/src/index.js scan ipv4 -c websiteExists
 ```
 
 Will produce a DB file of all websites in existence.
@@ -65,5 +65,5 @@ Will produce a DB file of all websites in existence.
 ### Find all websites that contain an accidentally uploaded git repository
 
 ```shell
-node dist/src/index.js scan -c git
+node dist/src/index.js scan ipv4 -c git
 ```
