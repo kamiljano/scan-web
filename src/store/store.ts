@@ -1,7 +1,7 @@
 export interface StoreValue {
   source: string;
   url: string;
-  meta: Record<string, string | number | string[]>;
+  meta: Record<string, boolean | string | number | string[]>;
 }
 
 export interface Store {

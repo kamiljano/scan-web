@@ -3,11 +3,12 @@ import * as path from "node:path";
 import * as console from "node:console";
 import { ipv4ToNumber } from "ipterate";
 import { request } from "./check-ip";
-import { startEta } from "./eta";
+import { startEta } from "../eta";
 import { Duration } from "luxon";
-import { CheckerMap } from "./checkers";
-import { Store } from "./store/store";
+import { CheckerMap } from "../checkers";
+import { Store } from "../store/store";
 import * as fs from "node:fs";
+import { onSuccess } from "../scan-utils";
 
 const getWorkerPath = () => {
   let result = path.resolve(__dirname, "generate-ips-worker.ts");
@@ -53,14 +54,14 @@ const generateIps = (
     });
   });
 
-interface ScanProps {
+interface IpScanProps {
   from: string;
   to: string;
   checks: CheckerMap;
   stores: Store[];
 }
 
-export default async function scan(props: ScanProps): Promise<void> {
+export default async function ipScan(props: IpScanProps): Promise<void> {
   let numberOfIps = 0;
   let numberOfProcessedIps = 0;
 
@@ -76,25 +77,7 @@ export default async function scan(props: ScanProps): Promise<void> {
     numberOfIps++;
 
     request(ip, props.checks)
-      .then(async (result) => {
-        if (result.length) {
-          console.log(`Check passed: ${JSON.stringify(result)}`);
-          console.log(result);
-
-          await Promise.all(
-            props.stores.flatMap(async (store) => {
-              return result.flatMap(async (r) => {
-                const { url, ...meta } = r.meta;
-                await store.store({
-                  url,
-                  source: r.checker,
-                  meta,
-                });
-              });
-            }),
-          );
-        }
-      })
+      .then(onSuccess(props.stores))
       .finally(() => {
         numberOfProcessedIps++;
 

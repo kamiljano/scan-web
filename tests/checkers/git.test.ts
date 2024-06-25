@@ -29,6 +29,7 @@ describe("git-checker", () => {
       success: true,
       meta: {
         url: "http://127.0.0.1",
+        directoryExposed: false,
       },
     });
   });
@@ -41,6 +42,21 @@ describe("git-checker", () => {
 
     expect(result).toEqual({
       success: false,
+    });
+  });
+
+  test("actual website with uploaded git", async () => {
+    const result = await git({
+      url: "https://myfastquote.com/.git/HEAD",
+      body: new Uint8Array(Buffer.from("ref: refs/heads/master")),
+    });
+
+    expect(result).toEqual({
+      success: true,
+      meta: {
+        url: "https://myfastquote.com/.git/HEAD",
+        directoryExposed: true,
+      },
     });
   });
 });

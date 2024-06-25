@@ -10,7 +10,10 @@ interface CheckerContext {
   url: string;
 }
 
-export type CheckerSuccessMeta = Record<string, string | number | string[]> & {
+export type CheckerSuccessMeta = Record<
+  string,
+  boolean | string | number | string[]
+> & {
   url: string;
 };
 

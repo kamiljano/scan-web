@@ -9,8 +9,8 @@ import {
   Mock,
   expect,
 } from "vitest";
-import { request } from "../src/check-ip";
-import { CheckerValidation } from "../src/checkers/checker";
+import { request } from "../../src/scan-ips/check-ip";
+import { CheckerValidation } from "../../src/checkers/checker";
 
 const successChecker: CheckerValidation = async (ctx) => {
   return {

@@ -1,5 +1,5 @@
 import { describe, test, beforeAll, expect, afterEach } from "vitest";
-import SqliteStore from "../src/store/sqlite-store";
+import SqliteStore from "../../src/store/sqlite-store";
 
 describe("sqlite-store", () => {
   const store = new SqliteStore(":memory:");
