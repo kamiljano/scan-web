@@ -7,7 +7,30 @@ Add your own checker to search for a specific issue across the entire internet.
 
 ## Usage
 
-1Install the dependencies
+Bun might work great once you run it on the server, but due to the limited IDE support (notably Intellij Idea does not
+yet support it as of today), using the NodeJS environment may be more convenient for at least the development purposes.
+
+### Bun
+
+1. Install the dependencies
+
+```bash
+bun install
+```
+
+2. Run the project
+
+```bash
+bun run src/index.ts scan -c websiteExists -f 1.0.0.0 -t 1.255.255.255
+```
+
+Run `node dist/src/index.js scan --help` for more parameters.
+
+The tool creates an SQLite database listing the IPs where a certain checker succeeded
+
+### NodeJS
+
+1. Install the dependencies
 
 ```bash
 npm install

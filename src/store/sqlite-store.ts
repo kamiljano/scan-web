@@ -1,6 +1,5 @@
 import { Store, StoreValue } from "./store";
 import Database from "better-sqlite3";
-import * as fs from "node:fs";
 import { Generated, Kysely, SqliteDialect, CamelCasePlugin, sql } from "kysely";
 import * as path from "node:path";
 
@@ -14,22 +13,35 @@ interface Database {
   sites: SiteRecord;
 }
 
-export default class SqliteStore implements Store {
-  private readonly db: Kysely<Database>;
+const isRunningOnBun = () => !!process.versions.bun;
 
-  constructor(filePath: string) {
-    console.log(`Creating the sqlite file in ${path.resolve(filePath)}`);
+const getSqlDialect = async (filePath: string) => {
+  if (isRunningOnBun()) {
+    const [bunSqlite, bunKysely] = await Promise.all([
+      import("bun:sqlite"),
+      import("kysely-bun-sqlite"),
+    ]);
 
-    const database = new Database(filePath);
+    const bunDb = new bunSqlite.Database(filePath);
 
-    this.db = new Kysely<Database>({
-      dialect: new SqliteDialect({ database }),
-      plugins: [new CamelCasePlugin()],
-    });
+    return new bunKysely.default.BunSqliteDialect({ database: bunDb });
   }
 
+  return new SqliteDialect({ database: new Database(filePath) });
+};
+
+export default class SqliteStore implements Store {
+  #db: Kysely<Database> | undefined;
+
+  constructor(private readonly filePath: string) {}
+
   async init() {
-    await this.db.schema
+    this.#db = new Kysely<Database>({
+      dialect: await getSqlDialect(this.filePath),
+      plugins: [new CamelCasePlugin()],
+    });
+
+    await this.#db.schema
       .createTable("sites")
       .ifNotExists()
       .addColumn("id", "integer", (cb) =>
@@ -39,6 +51,16 @@ export default class SqliteStore implements Store {
       .addColumn("meta", "json", (cb) => cb.notNull().defaultTo("{}"))
       .addUniqueConstraint("uniqueUrl", ["url"])
       .execute();
+
+    console.log(`SQLite DB initialized at ${path.resolve(this.filePath)}`);
+  }
+
+  get db() {
+    if (!this.#db) {
+      throw new Error("Database is not initialized");
+    }
+
+    return this.#db;
   }
 
   async store(val: StoreValue) {
