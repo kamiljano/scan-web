@@ -3,6 +3,7 @@ import {
   CheckerSuccessResult,
   CheckerValidation,
 } from "./checker";
+import { setTimeout } from "node:timers/promises";
 
 export interface CheckResult<TResult extends CheckerResult = CheckerResult> {
   result: TResult;
@@ -11,6 +12,7 @@ export interface CheckResult<TResult extends CheckerResult = CheckerResult> {
 
 export const execCheck = async (url: string, checkers: CheckerValidation[]) => {
   const controller = new AbortController();
+  setTimeout(4000).then(() => controller.abort());
   const response = await fetch(url, { signal: controller.signal });
 
   if (!response.ok) {
