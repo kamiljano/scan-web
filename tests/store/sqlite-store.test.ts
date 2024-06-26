@@ -36,6 +36,38 @@ describe("sqlite-store", () => {
     ]);
   });
 
+  test("the old value should be updated", async () => {
+    await store.store({
+      url: "http://example.com",
+      source: "testSource",
+      meta: {
+        key: "value",
+      },
+    });
+
+    await store.store({
+      url: "http://example.com",
+      source: "testSource",
+      meta: {
+        key: "value2",
+      },
+    });
+
+    const result = await store.list();
+
+    expect(result).toEqual([
+      {
+        id: expect.any(Number),
+        url: "http://example.com",
+        meta: {
+          testSource: {
+            key: "value2",
+          },
+        },
+      },
+    ]);
+  });
+
   test("the record should be updated", async () => {
     await Promise.all([
       store.store({

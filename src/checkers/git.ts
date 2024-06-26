@@ -3,7 +3,7 @@ import { CheckerValidation, textDecoder } from "./checker";
 const directoryExposed = async (url: string): Promise<boolean> => {
   try {
     const controller = new AbortController();
-    setTimeout(() => controller.abort(), 4000);
+    setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(url.replace(/\/HEAD$/, ""), {
       signal: controller.signal,
