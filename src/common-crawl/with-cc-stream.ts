@@ -98,12 +98,17 @@ interface CCStreamHandlers {
 
 export default async function withCcStream(
   dataset: string,
+  skip: number | undefined,
   { onDomain, onProgress, onCalculatedTotal }: CCStreamHandlers,
 ) {
-  const files = await listFiles(dataset);
+  let files = await listFiles(dataset);
   await onCalculatedTotal(files.length);
   const queue = new Queue(10);
-  let processed = 0;
+  let processed = skip ?? 0;
+
+  if (skip) {
+    files = files.slice(skip);
+  }
 
   await Promise.all(
     files.map(async (path) => {

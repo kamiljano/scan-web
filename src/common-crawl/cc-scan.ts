@@ -14,6 +14,7 @@ interface CcScanParams {
   dataset: string;
   checks: CheckerMap;
   stores: Store[];
+  skip?: number;
 }
 
 export const checkUrl = async (
@@ -58,7 +59,7 @@ export default async function ccScan(props: CcScanParams) {
 
   let eta: ReturnType<typeof startEta>;
 
-  await withCcStream(props.dataset, {
+  await withCcStream(props.dataset, props.skip, {
     onCalculatedTotal(total) {
       eta = startEta(total);
       console.log(`Total files found in Common Crawl: ${total}`);

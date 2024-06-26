@@ -134,6 +134,14 @@ const generateCommonCrawlScanCommand = (
     "Scans the internet based on the domains specified in the Common Crawl data",
     async (ccArgs) => {
       return ccArgs.options({
+        skip: {
+          alias: "n",
+          type: "number",
+          describe:
+            "The number of domains to skip. Useful when resuming a scan",
+          default: 0,
+          array: false,
+        },
         dataset: {
           alias: "d",
           choices: ["latest", ...(await getCcOptions())],
@@ -159,6 +167,7 @@ const generateCommonCrawlScanCommand = (
         dataset: await ccArgs.dataset,
         checks: toCheckerMap(ccArgs.check),
         stores: (await ccArgs.store) ?? [],
+        skip: ccArgs.skip,
       });
     },
   );
