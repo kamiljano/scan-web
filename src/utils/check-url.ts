@@ -1,8 +1,8 @@
 import { SuccessfulScanResult } from "../scan-utils";
 import { setTimeout } from "node:timers/promises";
-import { CheckResult, execCheck } from "../checkers/exec-check";
-import { CheckerSuccessResult } from "../checkers/checker";
-import { CheckerMap } from "../checkers";
+import { CheckResult, execCheck } from "../scan/checkers/exec-check";
+import { CheckerSuccessResult } from "../scan/checkers/checker";
+import { CheckerMap } from "../scan/checkers";
 
 export const checkUrl = async (
   url: string,

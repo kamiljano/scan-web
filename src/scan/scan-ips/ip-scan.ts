@@ -5,7 +5,7 @@ import { ipv4ToNumber } from "ipterate";
 import { request } from "./check-ip";
 import { startEta } from "../../eta";
 import { Duration } from "luxon";
-import { CheckerMap } from "../../checkers";
+import { CheckerMap } from "../checkers";
 import { Store } from "../../store/store";
 import * as fs from "node:fs";
 import { onSuccess } from "../../scan-utils";

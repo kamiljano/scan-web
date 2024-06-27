@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { git } from "../../src/checkers/git";
+import { git } from "../../../src/scan/checkers/git";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -17,7 +17,7 @@ describe("git-checker", () => {
 
   test("contains a HEAD file, therefore should be succeed", async () => {
     const headFile = fs.readFileSync(
-      path.resolve(__dirname, "..", "..", ".git", "HEAD"),
+      path.resolve(__dirname, "..", "..", "..", ".git", "HEAD"),
     );
 
     const result = await git({

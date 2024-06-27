@@ -1,6 +1,6 @@
-import { CheckerSuccessResult } from "../../checkers/checker";
-import { CheckerMap } from "../../checkers";
-import { execCheck, CheckResult } from "../../checkers/exec-check";
+import { CheckerSuccessResult } from "../checkers/checker";
+import { CheckerMap } from "../checkers";
+import { execCheck, CheckResult } from "../checkers/exec-check";
 import { SuccessfulScanResult } from "../../scan-utils";
 
 export const request = async (

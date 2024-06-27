@@ -10,7 +10,7 @@ import {
   expect,
 } from "vitest";
 import { request } from "../../../src/scan/scan-ips/check-ip";
-import { CheckerValidation } from "../../../src/checkers/checker";
+import { CheckerValidation } from "../../../src/scan/checkers/checker";
 
 const successChecker: CheckerValidation = async (ctx) => {
   return {

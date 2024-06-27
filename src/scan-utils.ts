@@ -1,5 +1,5 @@
 import console from "node:console";
-import { CheckerSuccessMeta } from "./checkers/checker";
+import { CheckerSuccessMeta } from "./scan/checkers/checker";
 import { Store } from "./store/store";
 
 export interface SuccessfulScanResult {

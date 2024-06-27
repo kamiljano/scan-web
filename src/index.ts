@@ -1,12 +1,15 @@
 import yargs from "yargs";
-import { CheckerMap, checkerMap } from "./checkers";
+import { CheckerMap, checkerMap } from "./scan/checkers";
 import ipScan from "./scan/scan-ips/ip-scan";
 import { stores } from "./store";
-import getCommonCrawlOptions from "./scan/common-crawl/cc-crawl-options";
 import ccScan from "./scan/common-crawl/cc-scan";
+import investigateGit from "./investigate/git/investigate-git";
+import getCommonCrawlOptions from "./scan/common-crawl/cc-crawl-options";
 import importCommonCrawl from "./import/commoon-crawl";
 import { Store } from "./store/store";
 import scanDatastore from "./scan/datastore/scan-datastore";
+import * as fs from "node:fs";
+import investigateProjectCli from "./investigate/investigate-project/investigate-project-cli";
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -184,6 +187,73 @@ const generateCommonCrawlScanCommand = (
   );
 };
 
+const generateInvestigation = (args: yargs.Argv<{}>) => {
+  return args
+    .command(
+      "git",
+      "Retrieves the git repositories found during the scan operation and builds a report",
+      (gitArgs) => {
+        return gitArgs.options({
+          dotGitUrl: {
+            alias: "g",
+            describe: "The URL of the .git directory to investigate",
+            type: "string",
+            demandOption: true,
+            array: false,
+          },
+          tempDir: {
+            alias: "t",
+            describe: "The temporary directory to store the downloaded files",
+            default: "./temp",
+            array: false,
+          },
+        });
+      },
+      async (gitArgs) => {
+        await investigateGit({
+          dotGitUrl: gitArgs.dotGitUrl,
+          tempDir: gitArgs.tempDir,
+        });
+      },
+    )
+    .command(
+      "local",
+      "Investigate a project in a local directory",
+      (localArgs) => {
+        return localArgs.options({
+          path: {
+            alias: "p",
+            describe: "The path to the project directory to investigate",
+            demandOption: true,
+            array: false,
+            coerce(path: string) {
+              if (Array.isArray(path)) {
+                throw new Error("Only one path can be specified");
+              }
+
+              if (!fs.existsSync(path)) {
+                throw new Error(`The path ${path} does not exist`);
+              }
+
+              if (!fs.statSync(path).isDirectory()) {
+                throw new Error(
+                  `The path ${path} does not point to a project directory`,
+                );
+              }
+
+              return path;
+            },
+          },
+        });
+      },
+      async (args) => {
+        await investigateProjectCli(args.path);
+      },
+    )
+    .strict()
+    .demandCommand();
+};
+
 const generateDataStoreScanCommand = (
   args: ReturnType<typeof generateCommonScanOptions>,
 ) => {
@@ -245,6 +315,11 @@ yargs(process.argv.slice(2))
   })
   .command("import", "Imports domains for scanning", (args) =>
     generateImportDomains(args).strict().demandCommand(),
+  )
+  .command(
+    "investigate",
+    "Runs investigations on specific patterns that have been discovered during the scan",
+    generateInvestigation,
   )
   .strict()
   .demandCommand()

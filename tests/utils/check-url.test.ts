@@ -9,7 +9,7 @@ import {
   test,
   vi,
 } from "vitest";
-import { CheckerValidation } from "../../src/checkers/checker";
+import { CheckerValidation } from "../../src/scan/checkers/checker";
 import { checkUrl } from "../../src/utils/check-url";
 
 const successChecker: CheckerValidation = async (ctx) => {
@@ -52,10 +52,7 @@ describe("checkUrl", () => {
 
   test("should return successful checks", async () => {
     const result = await checkUrl("http://example.com", {
-      checks: {
-        "": [failureChecker, successChecker],
-      },
-      stores: [],
+      "": [failureChecker, successChecker],
     });
 
     expect(result).toEqual([

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { firestoreChecker } from "../../src/checkers/firestore-checker";
+import { firestoreChecker } from "../../../src/scan/checkers/firestore-checker";
 
 const getBody = async (url: string) => {
   const result = await fetch(url);

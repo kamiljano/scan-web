@@ -1,5 +1,5 @@
 import { Store } from "../../store/store";
-import { CheckerMap } from "../../checkers";
+import { CheckerMap } from "../checkers";
 import Queue from "promise-queue";
 import { setTimeout } from "node:timers/promises";
 import { onSuccess } from "../../scan-utils";

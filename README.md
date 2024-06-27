@@ -4,7 +4,7 @@ Scan-Web is a tool allowing to scan all websites hosted all over the internet.
 You can either scan a range of IPs v4 or search with domains. The list of available domains is extracted from
 [Common Crawl](https://commoncrawl.org/) - a service that crawls the internet and publishes its data for free.
 
-In order to search for specific pre-defined patterns defined in the [checkers](./src/checkers).
+In order to search for specific pre-defined patterns defined in the [checkers](src/scan/checkers).
 Add your own checker to search for a specific issue across the entire internet.
 
 ## Usage

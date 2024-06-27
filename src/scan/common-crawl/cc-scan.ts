@@ -1,7 +1,7 @@
 import withCcStream from "../../utils/with-cc-stream";
 import Queue from "promise-queue";
 import { setTimeout } from "node:timers/promises";
-import { CheckerMap } from "../../checkers";
+import { CheckerMap } from "../checkers";
 import { Store } from "../../store/store";
 import { onSuccess } from "../../scan-utils";
 import { startEta } from "../../eta";
