@@ -58,6 +58,8 @@ export default async function ccScan(props: CcScanParams) {
   const queue = new Queue(100);
 
   let eta: ReturnType<typeof startEta>;
+  let totalDomains = 0;
+  let lastTotalPrinted = 0;
 
   await withCcStream(props.dataset, props.skip, {
     onCalculatedTotal(total) {
@@ -65,6 +67,11 @@ export default async function ccScan(props: CcScanParams) {
       console.log(`Total files found in Common Crawl: ${total}`);
     },
     onDomain(domains) {
+      totalDomains += domains.length;
+      if (totalDomains - lastTotalPrinted >= 1000) {
+        console.log(`Total domains found: ${totalDomains}`);
+        lastTotalPrinted = totalDomains;
+      }
       domains.map((url) =>
         queue.add(() => checkUrl(url, props).then(onSuccess(props.stores))),
       );
