@@ -117,5 +117,7 @@ export default async function investigateGit(props: GitInvestigationProps) {
 
   const report = await investigateProject(projectDir);
   printInvestigationReport(report);
+
+  console.log("Done");
   return report;
 }

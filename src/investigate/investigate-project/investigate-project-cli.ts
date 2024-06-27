@@ -5,4 +5,6 @@ export default async function investigateProjectCli(path: string) {
   const report = await investigateProject(path);
 
   printInvestigationReport(report);
+
+  console.log("Done");
 }
