@@ -102,17 +102,7 @@ export default async function ipScan(props: IpScanProps): Promise<void> {
           }
           lastEtaUpdate = Date.now();
           console.log(
-            `Processed: ${ip} - ${numberOfProcessedIps}/${numberOfIps}\tElapsed: ${Duration.fromMillis(
-              data.elapsed,
-            )
-              .shiftTo("hours", "minutes", "seconds")
-              .toHuman({
-                unitDisplay: "short",
-              })}; Remaining: ${Duration.fromMillis(data.remaining)
-              .shiftTo("hours", "minutes", "seconds")
-              .toHuman({
-                unitDisplay: "short",
-              })}; ${lastEtaUpdateLabel}`,
+            `Processed: ${ip} - ${numberOfProcessedIps}/${numberOfIps}\tElapsed: ${data.elapsedHuman}; Remaining: ${data.remainingHuman}; ${lastEtaUpdateLabel}`,
           );
         }
       });

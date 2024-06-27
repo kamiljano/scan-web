@@ -1,8 +1,12 @@
-export interface StoreValue {
+type KnownSite = string;
+
+interface ScannedSite {
   source: string;
   url: string;
   meta: Record<string, boolean | string | number | string[]>;
 }
+
+export type StoreValue = KnownSite | ScannedSite;
 
 export interface Store {
   init?(): void | Promise<void>;

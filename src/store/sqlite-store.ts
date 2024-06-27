@@ -64,6 +64,14 @@ export default class SqliteStore implements Store {
   }
 
   async store(val: StoreValue) {
+    if (typeof val === "string") {
+      await this.db
+        .insertInto("sites")
+        .values({ url: val, meta: sql`json('{}')` })
+        .onConflict((cb) => cb.column("url").doNothing())
+        .execute();
+      return;
+    }
     const meta = JSON.stringify({
       [val.source]: val.meta,
     });

@@ -1,4 +1,4 @@
-import withCcStream from "./with-cc-stream";
+import withCcStream from "../utils/with-cc-stream";
 import Queue from "promise-queue";
 import { setTimeout } from "node:timers/promises";
 import { CheckerMap } from "../checkers";

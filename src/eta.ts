@@ -1,3 +1,10 @@
+import { Duration } from "luxon";
+
+const toHuman = (ms: number) =>
+  Duration.fromMillis(ms).shiftTo("hours", "minutes", "seconds").toHuman({
+    unitDisplay: "short",
+  });
+
 export const startEta = (total: number) => {
   const start = Date.now();
 
@@ -9,6 +16,12 @@ export const startEta = (total: number) => {
       return {
         elapsed,
         remaining,
+        get elapsedHuman() {
+          return toHuman(elapsed);
+        },
+        get remainingHuman() {
+          return toHuman(remaining);
+        },
       };
     },
   };
