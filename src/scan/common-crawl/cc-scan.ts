@@ -8,6 +8,10 @@ import { startEta } from "../../eta";
 import console from "node:console";
 import { Duration } from "luxon";
 import { checkUrl } from "../../utils/check-url";
+import {
+  waitForEmptyQueue,
+  waitUntilQueueHasLessThanN,
+} from "../../utils/queue-utils";
 
 interface CcScanParams {
   dataset: string;
@@ -15,12 +19,6 @@ interface CcScanParams {
   stores: Store[];
   skip?: number;
 }
-
-const waitForEmptyQueue = async (queue: Queue) => {
-  while (queue.getQueueLength()) {
-    await setTimeout(1000);
-  }
-};
 
 export default async function ccScan(props: CcScanParams) {
   const queue = new Queue(100);
@@ -34,7 +32,7 @@ export default async function ccScan(props: CcScanParams) {
       eta = startEta(total);
       console.log(`Total files found in Common Crawl: ${total}`);
     },
-    onDomain(domains) {
+    async onDomain(domains) {
       totalDomains += domains.length;
       if (totalDomains - lastTotalPrinted >= 1000) {
         console.log(`Total domains found: ${totalDomains}`);
@@ -45,6 +43,10 @@ export default async function ccScan(props: CcScanParams) {
           checkUrl(url, props.checks).then(onSuccess(props.stores)),
         ),
       );
+
+      if (queue.getQueueLength() > 10000) {
+        await waitUntilQueueHasLessThanN(queue, 100);
+      }
     },
     onProgress(progress) {
       const data = eta.get(progress.processed);

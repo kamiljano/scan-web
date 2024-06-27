@@ -5,24 +5,15 @@ import { setTimeout } from "node:timers/promises";
 import { onSuccess } from "../../scan-utils";
 import { checkUrl } from "../../utils/check-url";
 import { startEta } from "../../eta";
+import {
+  waitForEmptyQueue,
+  waitUntilQueueHasLessThanN,
+} from "../../utils/queue-utils";
 
 interface ScanDatastoreProps {
   store: Store;
   checks: CheckerMap;
 }
-
-// TODO: it is extracted already into a separate file in another branch. Use that instead
-const waitForEmptyQueue = async (queue: Queue) => {
-  while (queue.getQueueLength()) {
-    await setTimeout(1000);
-  }
-};
-
-const waitUntilQueueHasLessThanN = async (queue: Queue, n: number) => {
-  while (queue.getQueueLength() > n) {
-    await setTimeout(1000);
-  }
-};
 
 export default async function scanDatastore(props: ScanDatastoreProps) {
   const totalCount = await props.store.countRecords();
