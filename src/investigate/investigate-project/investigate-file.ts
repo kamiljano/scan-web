@@ -69,7 +69,11 @@ export default async function investigateFile(
   const body = await fs.readFile(file, "utf-8");
   const secretLikeExpressions = secretIndicators
     .flatMap((indicator) =>
-      body.match(new RegExp(`\\w*${indicator}\\w*\\s*:?=?\\s*['"]`, "ig")),
+      [
+        body.match(new RegExp(`\\w*${indicator}\\w*\\s*:=\\s*['"]`, "ig")),
+        body.match(new RegExp(`\\w*${indicator}\\w*\\s*:\\s*['"]`, "ig")),
+        body.match(new RegExp(`\\w*${indicator}\\w*\\s*=\\s*['"]`, "ig")),
+      ].flat(),
     )
     .filter((match) => match) as string[];
 
