@@ -10,7 +10,7 @@ import {
   vi,
 } from "vitest";
 import { CheckerValidation } from "../../src/checkers/checker";
-import { checkUrl } from "../../src/common-crawl/cc-scan";
+import { checkUrl } from "../../src/utils/check-url";
 
 const successChecker: CheckerValidation = async (ctx) => {
   return {
@@ -27,7 +27,7 @@ const failureChecker: CheckerValidation = async () => {
   };
 };
 
-describe("cc-scan", () => {
+describe("checkUrl", () => {
   let fetch: Mock;
 
   beforeAll(() => {
@@ -43,30 +43,28 @@ describe("cc-scan", () => {
     fetch.mockRestore();
   });
 
-  describe("checkUrl", () => {
-    beforeEach(() => {
-      fetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: async () => new ArrayBuffer(0),
-      });
+  beforeEach(() => {
+    fetch.mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(0),
+    });
+  });
+
+  test("should return successful checks", async () => {
+    const result = await checkUrl("http://example.com", {
+      checks: {
+        "": [failureChecker, successChecker],
+      },
+      stores: [],
     });
 
-    test("should return successful checks", async () => {
-      const result = await checkUrl("http://example.com", {
-        checks: {
-          "": [failureChecker, successChecker],
+    expect(result).toEqual([
+      {
+        checker: "successChecker",
+        meta: {
+          url: "http://example.com/",
         },
-        stores: [],
-      });
-
-      expect(result).toEqual([
-        {
-          checker: "successChecker",
-          meta: {
-            url: "http://example.com/",
-          },
-        },
-      ]);
-    });
+      },
+    ]);
   });
 });

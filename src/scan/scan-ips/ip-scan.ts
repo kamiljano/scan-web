@@ -3,12 +3,12 @@ import * as path from "node:path";
 import * as console from "node:console";
 import { ipv4ToNumber } from "ipterate";
 import { request } from "./check-ip";
-import { startEta } from "../eta";
+import { startEta } from "../../eta";
 import { Duration } from "luxon";
-import { CheckerMap } from "../checkers";
-import { Store } from "../store/store";
+import { CheckerMap } from "../../checkers";
+import { Store } from "../../store/store";
 import * as fs from "node:fs";
-import { onSuccess } from "../scan-utils";
+import { onSuccess } from "../../scan-utils";
 
 const getWorkerPath = () => {
   let result = path.resolve(__dirname, "generate-ips-worker.ts");

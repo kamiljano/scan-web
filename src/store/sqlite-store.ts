@@ -30,10 +30,40 @@ const getSqlDialect = async (filePath: string) => {
   return new SqliteDialect({ database: new Database(filePath) });
 };
 
+const ITERATION_BATCH_SIZE = 1000;
+
 export default class SqliteStore implements Store {
   #db: Kysely<Database> | undefined;
 
   constructor(private readonly filePath: string) {}
+
+  async *iterateUrls() {
+    let lastResult: { id: number; url: string }[] = [];
+    do {
+      const query = this.db
+        .selectFrom("sites")
+        .select(["id", "url"])
+        .orderBy("id", "asc")
+        .limit(ITERATION_BATCH_SIZE);
+      if (lastResult.length) {
+        query.where("id", ">", lastResult[lastResult.length - 1].id);
+      }
+      const result = await query.execute();
+      for (const row of result) {
+        yield row.url;
+      }
+      lastResult = result;
+    } while (lastResult.length === ITERATION_BATCH_SIZE);
+  }
+
+  async countRecords(): Promise<number> {
+    const result = await this.db
+      .selectFrom("sites")
+      .select((cb) => [cb.fn.countAll().as("total")])
+      .executeTakeFirstOrThrow();
+
+    return result.total as number;
+  }
 
   async init() {
     this.#db = new Kysely<Database>({

@@ -1,11 +1,12 @@
 import yargs from "yargs";
 import { CheckerMap, checkerMap } from "./checkers";
-import ipScan from "./scan-ips/ip-scan";
+import ipScan from "./scan/scan-ips/ip-scan";
 import { stores } from "./store";
-import getCommonCrawlOptions from "./common-crawl/cc-crawl-options";
-import ccScan from "./common-crawl/cc-scan";
+import getCommonCrawlOptions from "./scan/common-crawl/cc-crawl-options";
+import ccScan from "./scan/common-crawl/cc-scan";
 import importCommonCrawl from "./import/commoon-crawl";
 import { Store } from "./store/store";
+import scanDatastore from "./scan/datastore/scan-datastore";
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -36,6 +37,23 @@ const isIPv4 = (ip: string) => {
   return ip;
 };
 
+const getStore = async (storeConfig: string) => {
+  const [storeName, param] = storeConfig.split("://");
+  const storeCreator = stores[storeName];
+
+  if (!storeCreator) {
+    throw new Error(`The store ${storeName} is not available`);
+  }
+
+  const store = storeCreator(param);
+
+  if (store.init) {
+    await store.init();
+  }
+
+  return store;
+};
+
 const storeOption: yargs.Options = {
   alias: "s",
   describe: "The store to use for storing the results",
@@ -43,24 +61,7 @@ const storeOption: yargs.Options = {
   coerce(val: string | string[]): Promise<Store[]> {
     const storeConfigs = Array.isArray(val) ? val : [val];
 
-    return Promise.all(
-      storeConfigs.map(async (storeConfig) => {
-        const [storeName, param] = storeConfig.split("://");
-        const storeCreator = stores[storeName];
-
-        if (!storeCreator) {
-          throw new Error(`The store ${storeName} is not available`);
-        }
-
-        const store = storeCreator(param);
-
-        if (store.init) {
-          await store.init();
-        }
-
-        return store;
-      }),
-    );
+    return Promise.all(storeConfigs.map(getStore));
   },
 };
 
@@ -183,6 +184,36 @@ const generateCommonCrawlScanCommand = (
   );
 };
 
+const generateDataStoreScanCommand = (
+  args: ReturnType<typeof generateCommonScanOptions>,
+) => {
+  return args.command(
+    "datastore",
+    "Scans the data store to acquire the initial list of URLs to check and updates it with the findings",
+    (dbArgs) => {
+      return dbArgs.options({
+        store: {
+          ...storeOption,
+          description:
+            "A single data store that will be used to acquire the initial list of URLs to check and update it with the findings",
+          coerce(val: string | string[]): Promise<Store> {
+            if (Array.isArray(val)) {
+              throw new Error("Only one store can be specified");
+            }
+            return getStore(val);
+          },
+        },
+      });
+    },
+    async (dbArgs) => {
+      await scanDatastore({
+        store: ((await dbArgs.store) ?? []) as Store,
+        checks: toCheckerMap(dbArgs.check),
+      });
+    },
+  );
+};
+
 const generateImportDomains = (args: yargs.Argv<{}>) => {
   return args.command(
     "commoncrawl",
@@ -207,8 +238,10 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
 
 yargs(process.argv.slice(2))
   .command("scan", "Scans the internet for specific patterns", (args) => {
-    const result = generateIpv4ScanCommand(generateCommonScanOptions(args));
-    return generateCommonCrawlScanCommand(result).strict().demandCommand();
+    let result = generateIpv4ScanCommand(generateCommonScanOptions(args));
+    result = generateCommonCrawlScanCommand(result);
+    result = generateDataStoreScanCommand(result);
+    return result.strict().demandCommand();
   })
   .command("import", "Imports domains for scanning", (args) =>
     generateImportDomains(args).strict().demandCommand(),

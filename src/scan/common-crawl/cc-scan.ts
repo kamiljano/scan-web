@@ -1,14 +1,13 @@
-import withCcStream from "../utils/with-cc-stream";
+import withCcStream from "../../utils/with-cc-stream";
 import Queue from "promise-queue";
 import { setTimeout } from "node:timers/promises";
-import { CheckerMap } from "../checkers";
-import { Store } from "../store/store";
-import { execCheck, CheckResult } from "../checkers/exec-check";
-import { CheckerSuccessResult } from "../checkers/checker";
-import { onSuccess, SuccessfulScanResult } from "../scan-utils";
-import { startEta } from "../eta";
+import { CheckerMap } from "../../checkers";
+import { Store } from "../../store/store";
+import { onSuccess } from "../../scan-utils";
+import { startEta } from "../../eta";
 import console from "node:console";
 import { Duration } from "luxon";
+import { checkUrl } from "../../utils/check-url";
 
 interface CcScanParams {
   dataset: string;
@@ -16,37 +15,6 @@ interface CcScanParams {
   stores: Store[];
   skip?: number;
 }
-
-export const checkUrl = async (
-  url: string,
-  props: Pick<CcScanParams, "checks" | "stores">,
-): Promise<SuccessfulScanResult[]> => {
-  const controller = new AbortController();
-  setTimeout(2000).then(() => controller.abort());
-
-  const paths = Object.entries(props.checks);
-
-  const result = await Promise.allSettled(
-    paths.flatMap(([path, checkers]) => {
-      return execCheck(`${url}/${path}`, checkers);
-    }),
-  );
-
-  const successfulRequest = result
-    .filter((r) => r.status === "fulfilled")
-    .flatMap(
-      (r) =>
-        (r as PromiseFulfilledResult<CheckResult<CheckerSuccessResult>[]>)
-          .value,
-    );
-
-  return successfulRequest
-    .filter((r) => r.result.success)
-    .map((r) => ({
-      checker: r.checker,
-      meta: r.result.meta,
-    }));
-};
 
 const waitForEmptyQueue = async (queue: Queue) => {
   while (queue.getQueueLength()) {
@@ -73,7 +41,9 @@ export default async function ccScan(props: CcScanParams) {
         lastTotalPrinted = totalDomains;
       }
       domains.map((url) =>
-        queue.add(() => checkUrl(url, props).then(onSuccess(props.stores))),
+        queue.add(() =>
+          checkUrl(url, props.checks).then(onSuccess(props.stores)),
+        ),
       );
     },
     onProgress(progress) {
