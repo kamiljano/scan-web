@@ -1,16 +1,29 @@
 import { CheckerValidation, textDecoder } from "./checker";
+import tryFetch from "../../utils/try-fetch";
+import ini from "ini";
 
-const directoryExposed = async (url: string): Promise<boolean> => {
+const getDotGitUrl = (url: string): string => {
+  const dotGitUrlMatch = url.match(/^.*\/\.git/);
+  if (!dotGitUrlMatch) {
+    throw new Error("URL does not contain .git");
+  }
+  return dotGitUrlMatch[0];
+};
+
+const getGitRepo = async (url: string): Promise<string | undefined> => {
   try {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), 10000);
+    const response = await tryFetch(`${getDotGitUrl(url)}/config`);
+    const body = await response.text();
+    return ini.parse(body)['remote "origin"'].url;
+  } catch (err) {
+    console.log("Git confing could not be fetched", err);
+  }
+  return undefined;
+};
 
-    const response = await fetch(url.replace(/\/HEAD$/, ""), {
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      return false;
-    }
+const isDirectoryExposed = async (url: string): Promise<boolean> => {
+  try {
+    const response = await tryFetch(getDotGitUrl(url));
     const body = await response.text();
     return (
       body.includes("<html") &&
@@ -26,12 +39,22 @@ export const git: CheckerValidation = async (ctx) => {
   if (ctx.body && ctx.body.length) {
     const body = textDecoder.decode(ctx.body);
     if (body.startsWith("ref:")) {
+      const [directoryExposed, gitRepo] = await Promise.all([
+        isDirectoryExposed(ctx.url),
+        getGitRepo(ctx.url),
+      ]);
+      const meta: Record<string, string | boolean> = {
+        url: ctx.url,
+        directoryExposed,
+      };
+
+      if (gitRepo) {
+        meta.gitRepo = gitRepo;
+      }
+
       return {
         success: true,
-        meta: {
-          url: ctx.url,
-          directoryExposed: await directoryExposed(ctx.url),
-        },
+        meta,
       };
     }
   }

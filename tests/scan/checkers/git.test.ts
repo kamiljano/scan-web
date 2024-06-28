@@ -55,6 +55,7 @@ describe("git-checker", () => {
       success: true,
       meta: {
         url: "https://myfastquote.com/.git/HEAD",
+        gitRepo: "git@github.com:LeadVision-Media/myfastquote.git",
         directoryExposed: true,
       },
     });

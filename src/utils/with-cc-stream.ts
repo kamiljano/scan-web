@@ -110,7 +110,7 @@ const processStream = async (path: string, onDomain: DomainsHandler) => {
         },
       );
     } catch (e) {
-      console.error(`Failed to process ${path}, retrying...`);
+      console.error(`Failed to process ${path}, retrying...`, e);
       await setTimeout(5000);
     }
   }
