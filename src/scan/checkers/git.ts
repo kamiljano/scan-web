@@ -39,7 +39,7 @@ const isCloneable = async (gitUrl: string) => {
   return Promise.race([
     new Promise<boolean>((resolve) => {
       const onData = (data: Buffer) => {
-        if (data.toString().toLowerCase().includes("password:")) {
+        if (data.toString().toLowerCase().includes("password")) {
           console.debug(
             `Git clone subprocess for ${gitUrl} asked for a password. Aborting...`,
           );
