@@ -19,7 +19,7 @@ export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
       );
     },
     onCalculatedTotal(total) {
-      console.log(`Total domains: ${total}`);
+      console.log(`Total Common Crawl data files: ${total}`);
       eta = startEta(total);
     },
     onProgress(progress) {

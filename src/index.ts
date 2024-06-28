@@ -1,3 +1,4 @@
+import "source-map-support/register";
 import yargs from "yargs";
 import { CheckerMap, checkerMap } from "./scan/checkers";
 import ipScan from "./scan/scan-ips/ip-scan";

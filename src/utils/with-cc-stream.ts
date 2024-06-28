@@ -2,6 +2,7 @@ import zlib from "node:zlib";
 import { pipeline } from "node:stream/promises";
 import { Writable, Transform } from "node:stream";
 import Queue from "promise-queue";
+import { setTimeout } from "node:timers/promises";
 
 type TransformCallback = (error?: Error | null, data?: any) => void;
 
@@ -85,13 +86,43 @@ const listFiles = async (dataset: string) => {
   return result;
 };
 
+type DomainsHandler = (domains: string[]) => void | Promise<void>;
+
+const processStream = async (path: string, onDomain: DomainsHandler) => {
+  for (let i = 0; i < 10; i++) {
+    try {
+      await fetchGzipTextFile(
+        `https://data.commoncrawl.org/${path}`,
+        async (lines) => {
+          const domains: string[] = [];
+          for (const line of lines) {
+            if (line.startsWith("WARC-Target-URI: ")) {
+              const url = line.slice(17);
+              if (baseDomainRegex.test(url)) {
+                domains.push(url.replace(/\/$/, ""));
+              }
+            }
+          }
+
+          if (domains.length) {
+            await onDomain(domains);
+          }
+        },
+      );
+    } catch (e) {
+      console.error(`Failed to process ${path}, retrying...`);
+      await setTimeout(5000);
+    }
+  }
+};
+
 interface CCStreamProgress {
   processed: number;
   total: number;
 }
 
 interface CCStreamHandlers {
-  onDomain: (domains: string[]) => void | Promise<void>;
+  onDomain: DomainsHandler;
   onProgress: (progress: CCStreamProgress) => void | Promise<void>;
   onCalculatedTotal: (total: number) => void | Promise<void>;
 }
@@ -112,26 +143,7 @@ export default async function withCcStream(
 
   await Promise.all(
     files.map(async (path) => {
-      await queue.add(() =>
-        fetchGzipTextFile(
-          `https://data.commoncrawl.org/${path}`,
-          async (lines) => {
-            const domains: string[] = [];
-            for (const line of lines) {
-              if (line.startsWith("WARC-Target-URI: ")) {
-                const url = line.slice(17);
-                if (baseDomainRegex.test(url)) {
-                  domains.push(url.replace(/\/$/, ""));
-                }
-              }
-            }
-
-            if (domains.length) {
-              await onDomain(domains);
-            }
-          },
-        ),
-      );
+      await queue.add(() => processStream(path, onDomain));
 
       onProgress({
         processed: ++processed,
