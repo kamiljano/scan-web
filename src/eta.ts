@@ -1,9 +1,4 @@
-import { Duration } from "luxon";
-
-const toHuman = (ms: number) =>
-  Duration.fromMillis(ms).shiftTo("hours", "minutes", "seconds").toHuman({
-    unitDisplay: "short",
-  });
+import { toHuman } from "./utils/date-time";
 
 export const startEta = (total: number) => {
   const start = Date.now();

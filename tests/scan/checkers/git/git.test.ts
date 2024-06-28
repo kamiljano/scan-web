@@ -17,7 +17,7 @@ describe("git-checker", () => {
 
   test("contains a HEAD file, therefore should be succeed", async () => {
     const headFile = fs.readFileSync(
-      path.resolve(__dirname, "..", "..", "..", ".git", "HEAD"),
+      path.resolve(__dirname, "..", "..", "..", "..", ".git", "HEAD"),
     );
 
     const result = await git({
