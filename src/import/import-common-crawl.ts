@@ -5,12 +5,13 @@ import { startEta } from "../eta";
 interface ImportCommonCrawlProps {
   dataset: string;
   stores: Store[];
+  skip: number;
 }
 
 export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
   let eta: ReturnType<typeof startEta>;
 
-  await withCcDomainStream(props.dataset, 0, {
+  await withCcDomainStream(props.dataset, props.skip, {
     async onDomain(domains) {
       await Promise.all(
         domains.flatMap((domain) =>

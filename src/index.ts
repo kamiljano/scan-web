@@ -293,6 +293,14 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
     async (ccArgs) => {
       return ccArgs.options({
         dataset: await commonCrawlOptions.dataset(),
+        skip: {
+          alias: "n",
+          type: "number",
+          describe:
+            "The number of dataset files to skip. Useful when resuming a import",
+          default: 0,
+          array: false,
+        },
         stores: {
           ...storeOption,
           demandOption: true,
@@ -303,6 +311,7 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
       return importCommonCrawl({
         dataset: await ccArgs.dataset,
         stores: (await ccArgs.stores) as Store[],
+        skip: ccArgs.skip,
       });
     },
   );
