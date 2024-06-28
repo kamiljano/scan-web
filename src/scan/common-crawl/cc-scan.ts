@@ -20,8 +20,10 @@ interface CcScanParams {
   skip?: number;
 }
 
+const QUEUE_SIZE = 50;
+
 export default async function ccScan(props: CcScanParams) {
-  const queue = new Queue(100);
+  const queue = new Queue(QUEUE_SIZE);
 
   let eta: ReturnType<typeof startEta>;
   let totalDomains = 0;
@@ -46,8 +48,8 @@ export default async function ccScan(props: CcScanParams) {
         ),
       );
 
-      if (queue.getQueueLength() > 10000) {
-        await waitUntilQueueHasLessThanN(queue, 100);
+      if (queue.getQueueLength() > 1000) {
+        await waitUntilQueueHasLessThanN(queue, QUEUE_SIZE);
       }
     },
     onProgress(progress) {
