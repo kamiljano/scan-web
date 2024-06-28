@@ -1,4 +1,4 @@
-import withCcStream from "../../utils/with-cc-stream";
+import withCcDomainStream from "../../utils/with-cc-domain-stream";
 import Queue from "promise-queue";
 import { CheckerMap } from "../checkers";
 import { Store } from "../../store/store";
@@ -28,7 +28,7 @@ export default async function ccScan(props: CcScanParams) {
   let totalDomains = 0;
   let lastTotalPrinted = 0;
 
-  await withCcStream(props.dataset, props.skip, {
+  await withCcDomainStream(props.dataset, props.skip, {
     onCalculatedTotal(total) {
       eta = startEta(total);
       console.log(`Total files found in Common Crawl: ${total}`);

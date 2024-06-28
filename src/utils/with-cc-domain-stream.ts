@@ -3,6 +3,7 @@ import { pipeline } from "node:stream/promises";
 import { Writable, Transform } from "node:stream";
 import Queue from "promise-queue";
 import { setTimeout } from "node:timers/promises";
+import tryFetch from "./try-fetch";
 
 type TransformCallback = (error?: Error | null, data?: any) => void;
 
@@ -126,7 +127,61 @@ interface CCStreamHandlers {
   onCalculatedTotal: (total: number) => void | Promise<void>;
 }
 
-export default async function withCcStream(
+const retry = async <T>(callback: () => Promise<T>): Promise<T> => {
+  let lastError: Error | undefined;
+  for (let i = 0; i < 3; i++) {
+    try {
+      return await callback();
+    } catch (e) {
+      lastError = e as Error;
+      await setTimeout(5000);
+    }
+  }
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error("Unexpected retry error");
+};
+
+export async function withCcDataStream(
+  dataset: string,
+  {
+    onFileStream,
+    onCalculatedTotal,
+  }: {
+    onFileStream: (
+      filePath: string,
+      stream: ReadableStream,
+    ) => void | Promise<void>;
+    onCalculatedTotal: (total: number) => void | Promise<void>;
+  },
+) {
+  const files = await listFiles(dataset);
+  await onCalculatedTotal(files.length);
+  const queue = new Queue(10);
+
+  await Promise.all(
+    files.map((filePath) => {
+      return queue.add(async () => {
+        const url = `https://data.commoncrawl.org/${filePath}`;
+        try {
+          await retry(async () => {
+            const response = await tryFetch(url);
+            const body = response.body;
+            if (!body) {
+              return;
+            }
+            await onFileStream(filePath, response.body);
+          });
+        } catch (err) {
+          console.error(`Error processing file ${url}`, err);
+        }
+      });
+    }),
+  );
+}
+
+export default async function withCcDomainStream(
   dataset: string,
   skip: number | undefined,
   { onDomain, onProgress, onCalculatedTotal }: CCStreamHandlers,
@@ -142,7 +197,7 @@ export default async function withCcStream(
 
   await Promise.all(
     files.map(async (path) => {
-      await queue.add(() => processStream(path, onDomain));
+      await queue.add(() => retry(() => processStream(path, onDomain)));
 
       onProgress({
         processed: ++processed,

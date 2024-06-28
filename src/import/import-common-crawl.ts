@@ -1,4 +1,4 @@
-import withCcStream from "../utils/with-cc-stream";
+import withCcDomainStream from "../utils/with-cc-domain-stream";
 import { Store } from "../store/store";
 import { startEta } from "../eta";
 
@@ -10,7 +10,7 @@ interface ImportCommonCrawlProps {
 export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
   let eta: ReturnType<typeof startEta>;
 
-  await withCcStream(props.dataset, 0, {
+  await withCcDomainStream(props.dataset, 0, {
     async onDomain(domains) {
       await Promise.all(
         domains.flatMap((domain) =>

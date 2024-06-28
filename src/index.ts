@@ -11,6 +11,7 @@ import { Store } from "./store/store";
 import scanDatastore from "./scan/datastore/scan-datastore";
 import * as fs from "node:fs";
 import investigateProjectCli from "./investigate/investigate-project/investigate-project-cli";
+import downloadCommonCrawl from "./download/download-common-crawl";
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -307,6 +308,30 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
   );
 };
 
+const generateDownloadCommand = (args: yargs.Argv<{}>) => {
+  return args.command(
+    "commoncrawl",
+    "Downloads the Common Crawl dataset",
+    async (ccArgs) => {
+      return ccArgs.options({
+        dataset: await commonCrawlOptions.dataset(),
+        output: {
+          alias: "o",
+          describe: "The output directory",
+          default: "./datasets/commoncrawl",
+          array: false,
+        },
+      });
+    },
+    async (ccArgs) => {
+      await downloadCommonCrawl({
+        dataset: await ccArgs.dataset,
+        output: ccArgs.output,
+      });
+    },
+  );
+};
+
 yargs(process.argv.slice(2))
   .command("scan", "Scans the internet for specific patterns", (args) => {
     let result = generateIpv4ScanCommand(generateCommonScanOptions(args));
@@ -321,6 +346,9 @@ yargs(process.argv.slice(2))
     "investigate",
     "Runs investigations on specific patterns that have been discovered during the scan",
     generateInvestigation,
+  )
+  .command("download", "Downloads domain datasets", (args) =>
+    generateDownloadCommand(args).strict().demandCommand(),
   )
   .strict()
   .demandCommand()
