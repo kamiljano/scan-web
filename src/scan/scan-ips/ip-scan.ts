@@ -4,7 +4,6 @@ import * as console from "node:console";
 import { ipv4ToNumber } from "ipterate";
 import { request } from "./check-ip";
 import { startEta } from "../../eta";
-import { Duration } from "luxon";
 import { CheckerMap } from "../checkers";
 import { Store } from "../../store/store";
 import * as fs from "node:fs";
@@ -77,7 +76,7 @@ export default async function ipScan(props: IpScanProps): Promise<void> {
     numberOfIps++;
 
     request(ip, props.checks)
-      .then(onSuccess(props.stores))
+      .then((result) => onSuccess(props.stores, `http://${ip}`, result))
       .finally(() => {
         numberOfProcessedIps++;
 

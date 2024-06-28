@@ -13,9 +13,7 @@ interface CheckerContext {
 export type CheckerSuccessMeta = Record<
   string,
   boolean | string | number | string[]
-> & {
-  url: string;
-};
+>;
 
 export interface CheckerSuccessResult {
   success: true;

@@ -40,7 +40,9 @@ export default async function ccScan(props: CcScanParams) {
       }
       domains.map((url) =>
         queue.add(() =>
-          checkUrl(url, props.checks).then(onSuccess(props.stores)),
+          checkUrl(url, props.checks).then((result) =>
+            onSuccess(props.stores, url, result),
+          ),
         ),
       );
 

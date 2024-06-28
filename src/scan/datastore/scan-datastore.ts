@@ -27,17 +27,19 @@ export default async function scanDatastore(props: ScanDatastoreProps) {
     }
     queue.add(() =>
       checkUrl(url, props.checks)
-        .then(onSuccess([props.store]))
+        .then((result) => onSuccess([props.store], url, result))
         .then(() => {
           processed++;
 
           const data = eta.get(processed);
           console.log(
-            `Processed ${processed}/${totalCount} (${Math.round(processed / (totalCount / 100))}%)domains\tElapsed: ${data.elapsedHuman}; Remaining: ${data.remainingHuman}`,
+            `Processed ${processed}/${totalCount} (${Math.round(processed / (totalCount / 100))}%) domains\tElapsed: ${data.elapsedHuman}; Remaining: ${data.remainingHuman}`,
           );
         }),
     );
   }
 
   await waitForEmptyQueue(queue);
+
+  console.log("Done");
 }
