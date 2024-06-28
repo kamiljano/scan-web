@@ -12,14 +12,17 @@ const getDotGitUrl = (url: string): string => {
 };
 
 const getGitRepo = async (url: string): Promise<string | undefined> => {
+  let configUrl: string | undefined = undefined;
+  let body: string | undefined = undefined;
   try {
-    const response = await tryFetch(`${getDotGitUrl(url)}/config`, {
+    configUrl = `${getDotGitUrl(url)}/config`;
+    const response = await tryFetch(configUrl, {
       timeout: 10000,
     });
-    const body = await response.text();
+    body = await response.text();
     return ini.parse(body)['remote "origin"'].url;
   } catch (err) {
-    console.log("Git confing could not be fetched", err);
+    console.log(`Git confing could not be fetched: ${configUrl}`, body, err);
   }
   return undefined;
 };
