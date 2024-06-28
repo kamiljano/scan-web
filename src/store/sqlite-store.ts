@@ -40,13 +40,13 @@ export default class SqliteStore implements Store {
   async *iterateUrls() {
     let lastResult: { id: number; url: string }[] = [];
     do {
-      const query = this.db
+      let query = this.db
         .selectFrom("sites")
         .select(["id", "url"])
         .orderBy("id", "asc")
         .limit(ITERATION_BATCH_SIZE);
       if (lastResult.length) {
-        query.where("id", ">", lastResult[lastResult.length - 1].id);
+        query = query.where("id", ">", lastResult[lastResult.length - 1].id);
       }
       const result = await query.execute();
       for (const row of result) {

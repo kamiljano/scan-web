@@ -12,6 +12,21 @@ describe("sqlite-store", () => {
     await store.clear();
   });
 
+  test("iterateUrls", async () => {
+    const promises: Promise<unknown>[] = [];
+    for (let i = 0; i < 1100; i++) {
+      promises.push(store.store(`http://example${i}.com`));
+    }
+    await Promise.all(promises);
+
+    let results = 0;
+    for await (const url of store.iterateUrls()) {
+      results++;
+    }
+
+    expect(results).toEqual(1100);
+  });
+
   test("new record should be created", async () => {
     await store.store({
       url: "http://example.com",
