@@ -1,6 +1,5 @@
 import withCcStream from "../../utils/with-cc-stream";
 import Queue from "promise-queue";
-import { setTimeout } from "node:timers/promises";
 import { CheckerMap } from "../checkers";
 import { Store } from "../../store/store";
 import { onSuccess } from "../../scan-utils";
@@ -20,7 +19,7 @@ interface CcScanParams {
   skip?: number;
 }
 
-const QUEUE_SIZE = 50;
+const QUEUE_SIZE = 100;
 
 export default async function ccScan(props: CcScanParams) {
   const queue = new Queue(QUEUE_SIZE);
@@ -48,7 +47,7 @@ export default async function ccScan(props: CcScanParams) {
         ),
       );
 
-      if (queue.getQueueLength() > 1000) {
+      if (queue.getQueueLength() > 10000) {
         await waitUntilQueueHasLessThanN(queue, QUEUE_SIZE);
       }
     },

@@ -42,7 +42,7 @@ export class FullLineStream extends Transform {
   }
 }
 
-const baseDomainRegex = /^https?:\/\/[\w.]+\/?$/;
+const baseDomainRegex = /^(https?:\/\/[\w.]+)\/?.*$/;
 
 const fetchGzipTextFile = async (
   url: string,
@@ -97,8 +97,9 @@ const processStream = async (path: string, onDomain: DomainsHandler) => {
         for (const line of lines) {
           if (line.startsWith("WARC-Target-URI: ")) {
             const url = line.slice(17);
-            if (baseDomainRegex.test(url)) {
-              domains.push(url.replace(/\/$/, ""));
+            const match = url.match(baseDomainRegex);
+            if (match && match.length >= 2) {
+              domains.push(match[1]);
             }
           }
         }
