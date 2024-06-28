@@ -2,7 +2,7 @@ import Queue from "promise-queue";
 import { setTimeout } from "node:timers/promises";
 
 export const waitForEmptyQueue = async (queue: Queue) => {
-  while (queue.getQueueLength()) {
+  while (queue.getQueueLength() || queue.getPendingLength()) {
     await setTimeout(1000);
   }
 };
