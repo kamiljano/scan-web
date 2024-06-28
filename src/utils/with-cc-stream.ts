@@ -89,28 +89,26 @@ const listFiles = async (dataset: string) => {
 type DomainsHandler = (domains: string[]) => void | Promise<void>;
 
 const processStream = async (path: string, onDomain: DomainsHandler) => {
+  const url = `https://data.commoncrawl.org/${path}`;
   for (let i = 0; i < 10; i++) {
     try {
-      await fetchGzipTextFile(
-        `https://data.commoncrawl.org/${path}`,
-        async (lines) => {
-          const domains: string[] = [];
-          for (const line of lines) {
-            if (line.startsWith("WARC-Target-URI: ")) {
-              const url = line.slice(17);
-              if (baseDomainRegex.test(url)) {
-                domains.push(url.replace(/\/$/, ""));
-              }
+      await fetchGzipTextFile(url, async (lines) => {
+        const domains: string[] = [];
+        for (const line of lines) {
+          if (line.startsWith("WARC-Target-URI: ")) {
+            const url = line.slice(17);
+            if (baseDomainRegex.test(url)) {
+              domains.push(url.replace(/\/$/, ""));
             }
           }
+        }
 
-          if (domains.length) {
-            await onDomain(domains);
-          }
-        },
-      );
+        if (domains.length) {
+          await onDomain(domains);
+        }
+      });
     } catch (e) {
-      console.error(`Failed to process ${path}, retrying...`, e);
+      console.error(`Failed to process ${url}, retrying...`, e);
       await setTimeout(5000);
     }
   }

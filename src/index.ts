@@ -6,7 +6,7 @@ import { stores } from "./store";
 import ccScan from "./scan/common-crawl/cc-scan";
 import investigateGit from "./investigate/git/investigate-git";
 import getCommonCrawlOptions from "./scan/common-crawl/cc-crawl-options";
-import importCommonCrawl from "./import/commoon-crawl";
+import importCommonCrawl from "./import/import-common-crawl";
 import { Store } from "./store/store";
 import scanDatastore from "./scan/datastore/scan-datastore";
 import * as fs from "node:fs";
