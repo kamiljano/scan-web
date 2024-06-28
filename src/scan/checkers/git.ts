@@ -1,6 +1,10 @@
 import { CheckerValidation, textDecoder } from "./checker";
 import tryFetch from "../../utils/try-fetch";
 import ini from "ini";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { tmpdir } from "node:os";
+import { spawn } from "node:child_process";
 
 const getDotGitUrl = (url: string): string => {
   const dotGitUrlMatch = url.match(/^.*\/\.git/);
@@ -12,7 +16,9 @@ const getDotGitUrl = (url: string): string => {
 
 const getGitRepo = async (url: string): Promise<string | undefined> => {
   try {
-    const response = await tryFetch(`${getDotGitUrl(url)}/config`);
+    const response = await tryFetch(`${getDotGitUrl(url)}/config`, {
+      timeout: 10000,
+    });
     const body = await response.text();
     return ini.parse(body)['remote "origin"'].url;
   } catch (err) {
@@ -21,9 +27,23 @@ const getGitRepo = async (url: string): Promise<string | undefined> => {
   return undefined;
 };
 
+const isCloneable = async (gitUrl: string) => {
+  const tempDir = await fs.mkdtemp(path.join(tmpdir(), "git-checker"));
+  return new Promise<boolean>((resolve) => {
+    const clone = spawn("git", ["clone", gitUrl, tempDir]);
+    clone.on("close", (code) => {
+      if (code === 0) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+  });
+};
+
 const isDirectoryExposed = async (url: string): Promise<boolean> => {
   try {
-    const response = await tryFetch(getDotGitUrl(url));
+    const response = await tryFetch(getDotGitUrl(url), { timeout: 10000 });
     const body = await response.text();
     return (
       body.includes("<html") &&
@@ -50,6 +70,7 @@ export const git: CheckerValidation = async (ctx) => {
 
       if (gitRepo) {
         meta.gitRepo = gitRepo;
+        meta.cloneable = await isCloneable(gitRepo);
       }
 
       return {

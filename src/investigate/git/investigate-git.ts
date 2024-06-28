@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 import { waitForEmptyQueue } from "../../utils/queue-utils";
 import investigateProject from "../investigate-project/investigate-project";
 import printInvestigationReport from "../investigate-project/print-investigation-report";
+import tryFetch from "../../utils/try-fetch";
 
 interface GitInvestigationProps {
   dotGitUrl: string;
@@ -15,10 +16,7 @@ interface GitInvestigationProps {
 }
 
 const reqHtml = async (url: string) => {
-  const controller = new AbortController();
-  setTimeout(2000).then(() => controller.abort());
-
-  const response = await fetch(url, { signal: controller.signal });
+  const response = await tryFetch(url);
   const html = await response.text();
   return load(html);
 };

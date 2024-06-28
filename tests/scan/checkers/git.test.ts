@@ -45,7 +45,7 @@ describe("git-checker", () => {
     });
   });
 
-  test("actual website with uploaded git", async () => {
+  test("actual website with uploaded git - https://myfastquote.com", async () => {
     const result = await git({
       url: "https://myfastquote.com/.git/HEAD",
       body: new Uint8Array(Buffer.from("ref: refs/heads/master")),
@@ -57,6 +57,24 @@ describe("git-checker", () => {
         url: "https://myfastquote.com/.git/HEAD",
         gitRepo: "git@github.com:LeadVision-Media/myfastquote.git",
         directoryExposed: true,
+        cloneable: false,
+      },
+    });
+  });
+
+  test("actual website with uploaded git - https://buxtehude2007.de", async () => {
+    const result = await git({
+      url: "https://buxtehude2007.de/.git/HEAD",
+      body: new Uint8Array(Buffer.from("ref: refs/heads/master")),
+    });
+
+    expect(result).toEqual({
+      success: true,
+      meta: {
+        url: "https://buxtehude2007.de/.git/HEAD",
+        directoryExposed: true,
+        gitRepo: "https://github.com/technext/Agency-2.git",
+        cloneable: true,
       },
     });
   });
