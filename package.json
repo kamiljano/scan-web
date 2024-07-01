@@ -1,12 +1,16 @@
 {
   "name": "scan-web",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "start": "bun src/index.ts",
     "test": "vitest run tests",
     "build": "tsc"
   },
   "keywords": [],
+  "workspaces": [
+    "infra/"
+  ],
   "author": "Kamil Janowski <kgjanowski@gmail.com>",
   "license": "ISC",
   "dependencies": {

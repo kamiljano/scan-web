@@ -1,0 +1,10 @@
+name: infra
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: An application allowing to scan all of the internet for common vulnerabilities
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: kubernetes-typescript

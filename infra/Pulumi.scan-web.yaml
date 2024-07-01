@@ -1,0 +1,5 @@
+config:
+  harbor:password: admin
+  harbor:url: http://core.harbor.domain
+  harbor:username: admin
+  infra:isMinikube: "true"
