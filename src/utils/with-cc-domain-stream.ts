@@ -98,7 +98,11 @@ const processStream = async (path: string, onDomain: DomainsHandler) => {
             const url = line.slice(17);
             const match = url.match(baseDomainRegex);
             if (match && match.length >= 2) {
-              domains.push(match[1]);
+              domains.push(
+                match[1]
+                  .replace(/^http:\/\/www\./, "http://")
+                  .replace(/^https:\/\/www\./, "https://"),
+              );
             }
           }
         }
