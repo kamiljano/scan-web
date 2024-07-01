@@ -275,12 +275,20 @@ const generateDataStoreScanCommand = (
             return getStore(val);
           },
         },
+        verbose: {
+          alias: "v",
+          describe: "Prints the URLs that are being checked",
+          default: false,
+          array: false,
+          type: "boolean",
+        },
       });
     },
     async (dbArgs) => {
       await scanDatastore({
         store: ((await dbArgs.store) ?? []) as Store,
         checks: toCheckerMap(dbArgs.check),
+        verbose: dbArgs.verbose,
       });
     },
   );

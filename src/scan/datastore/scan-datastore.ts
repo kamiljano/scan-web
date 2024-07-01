@@ -13,6 +13,7 @@ import {
 interface ScanDatastoreProps {
   store: Store;
   checks: CheckerMap;
+  verbose: boolean;
 }
 
 export default async function scanDatastore(props: ScanDatastoreProps) {
@@ -25,8 +26,11 @@ export default async function scanDatastore(props: ScanDatastoreProps) {
     if (queue.getQueueLength() > 10000) {
       await waitUntilQueueHasLessThanN(queue, 100);
     }
-    queue.add(() =>
-      checkUrl(url, props.checks)
+    queue.add(() => {
+      if (props.verbose) {
+        console.log(`Processing ${url}`);
+      }
+      return checkUrl(url, props.checks)
         .then((result) => onSuccess([props.store], url, result))
         .then(() => {
           processed++;
@@ -35,8 +39,8 @@ export default async function scanDatastore(props: ScanDatastoreProps) {
           console.log(
             `Processed ${processed}/${totalCount} (${Math.round(processed / (totalCount / 100))}%) domains\tElapsed: ${data.elapsedHuman}; Remaining: ${data.remainingHuman}`,
           );
-        }),
-    );
+        });
+    });
   }
 
   await waitForEmptyQueue(queue);

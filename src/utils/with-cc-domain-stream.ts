@@ -43,7 +43,7 @@ export class FullLineStream extends Transform {
   }
 }
 
-const baseDomainRegex = /^(https?:\/\/[\w.]+)\/?.*$/;
+const baseDomainRegex = /^(https?:\/\/[\w.-]+)\/?.*$/;
 
 const fetchGzipTextFile = async (
   url: string,
