@@ -50,7 +50,7 @@ const fetchGzipTextFile = async (
   lines: (lines: string[]) => void | Promise<void>,
 ) => {
   const response = await tryFetch(url, {
-    timeout: 10_000,
+    timeout: fileProcessingTimeout,
   });
 
   if (!response.body) {
@@ -141,6 +141,8 @@ const retry = async <T>(callback: () => Promise<T>): Promise<T> => {
   throw new Error("Unexpected retry error");
 };
 
+const fileProcessingTimeout = 1000 * 60 * 60;
+
 export async function withCcDataStream(
   dataset: string,
   {
@@ -165,7 +167,7 @@ export async function withCcDataStream(
         try {
           await retry(async () => {
             const response = await tryFetch(url, {
-              timeout: 10_000,
+              timeout: fileProcessingTimeout,
             });
             const body = response.body;
             if (!body) {
