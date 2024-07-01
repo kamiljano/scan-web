@@ -49,11 +49,9 @@ const fetchGzipTextFile = async (
   url: string,
   lines: (lines: string[]) => void | Promise<void>,
 ) => {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch the Common Crawl dataset");
-  }
+  const response = await tryFetch(url, {
+    timeout: 10_000,
+  });
 
   if (!response.body) {
     throw new Error("Common Crawl dataset is not readable");
@@ -166,7 +164,9 @@ export async function withCcDataStream(
         const url = `https://data.commoncrawl.org/${filePath}`;
         try {
           await retry(async () => {
-            const response = await tryFetch(url);
+            const response = await tryFetch(url, {
+              timeout: 10_000,
+            });
             const body = response.body;
             if (!body) {
               return;

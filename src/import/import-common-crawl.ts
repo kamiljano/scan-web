@@ -13,7 +13,7 @@ export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
 
   await withCcDomainStream(props.dataset, props.skip, {
     async onDomain(domains) {
-      await Promise.all(
+      await Promise.allSettled(
         domains.flatMap((domain) =>
           props.stores.map((store) => store.store(domain)),
         ),
