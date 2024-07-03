@@ -1,14 +1,39 @@
-import withCcDomainStream from "../utils/with-cc-domain-stream";
+import withCcDomainStream, { listFiles } from "../utils/with-cc-domain-stream";
 import { Store } from "../store/store";
 import { startEta } from "../eta";
+import fs from "node:fs/promises";
+import * as process from "node:process";
+import _ from "lodash";
 
 interface ImportCommonCrawlProps {
   dataset: string;
   stores: Store[];
   skip: number;
+  onlyList: boolean;
+  splitListEvery: number | undefined;
 }
 
-export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
+const readFiles = async (props: ImportCommonCrawlProps) => {
+  const files = await listFiles(props.dataset);
+
+  if (props.splitListEvery) {
+    await Promise.all(
+      _.chunk(files, props.splitListEvery).map(async (chunk, i) => {
+        await fs.writeFile(
+          `cc-files-${i}.json`,
+          JSON.stringify(chunk, null, 2),
+        );
+      }),
+    );
+  } else {
+    await fs.writeFile("cc-files.json", JSON.stringify(files, null, 2));
+  }
+
+  console.log("done");
+  process.exit(0);
+};
+
+const importDomains = async (props: ImportCommonCrawlProps) => {
   let eta: ReturnType<typeof startEta>;
 
   await withCcDomainStream(props.dataset, props.skip, {
@@ -31,4 +56,12 @@ export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
       );
     },
   });
+};
+
+export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
+  if (props.onlyList) {
+    await readFiles(props);
+  } else {
+    await importDomains(props);
+  }
 }

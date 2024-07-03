@@ -72,7 +72,7 @@ const fetchGzipTextFile = async (
   );
 };
 
-const listFiles = async (dataset: string) => {
+export const listFiles = async (dataset: string) => {
   const result: string[] = [];
 
   await fetchGzipTextFile(

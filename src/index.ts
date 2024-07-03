@@ -309,6 +309,18 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
           default: 0,
           array: false,
         },
+        onlyList: {
+          type: "boolean",
+          default: false,
+          description: "If specified, only the file list will be imported",
+          array: false,
+        },
+        splitListEvery: {
+          type: "number",
+          description:
+            "Applicable only when onlyList is specified. The list will be split into a number of files. Each containing 'splitListEvery' number of files",
+          array: false,
+        },
         stores: {
           ...storeOption,
           demandOption: true,
@@ -320,6 +332,8 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
         dataset: await ccArgs.dataset,
         stores: (await ccArgs.stores) as Store[],
         skip: ccArgs.skip,
+        splitListEvery: ccArgs.splitListEvery,
+        onlyList: ccArgs.onlyList,
       });
     },
   );
