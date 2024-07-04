@@ -175,6 +175,17 @@ const generateCommonCrawlScanCommand = (
           default: 0,
           array: false,
         },
+        fromBatchFile: {
+          type: "string",
+          describe:
+            "If you previously saved the output of import --onlyList, then you can specify the file here",
+          array: false,
+        },
+        batchId: {
+          type: "number",
+          description:
+            "Define only when --fromBatchFile is specified. The file should contain a number of batches. This specifies the ID of batch to use",
+        },
         dataset: await commonCrawlOptions.dataset(),
       });
     },
@@ -184,6 +195,8 @@ const generateCommonCrawlScanCommand = (
         checks: toCheckerMap(ccArgs.check),
         stores: ((await ccArgs.store) ?? []) as Store[],
         skip: ccArgs.skip,
+        fromBatchFile: ccArgs.fromBatchFile,
+        batchId: ccArgs.batchId,
       });
     },
   );

@@ -187,12 +187,17 @@ export async function withCcDataStream(
   );
 }
 
+interface StreamProps {
+  skip?: number;
+  files?: string[];
+}
+
 export default async function withCcDomainStream(
   dataset: string,
-  skip: number | undefined,
+  { skip, ...props }: StreamProps,
   { onDomain, onProgress, onCalculatedTotal }: CCStreamHandlers,
 ) {
-  let files = await listFiles(dataset);
+  let files = props.files ?? (await listFiles(dataset));
   await onCalculatedTotal(files.length);
   const queue = new Queue(10);
   let processed = skip ?? 0;
