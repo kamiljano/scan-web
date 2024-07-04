@@ -17,13 +17,9 @@ const readFiles = async (props: ImportCommonCrawlProps) => {
   const files = await listFiles(props.dataset);
 
   if (props.splitListEvery) {
-    await Promise.all(
-      _.chunk(files, props.splitListEvery).map(async (chunk, i) => {
-        await fs.writeFile(
-          `cc-files-${i}.json`,
-          JSON.stringify(chunk, null, 2),
-        );
-      }),
+    await fs.writeFile(
+      "cc-files.json",
+      JSON.stringify(_.chunk(files, props.splitListEvery), null, 2),
     );
   } else {
     await fs.writeFile("cc-files.json", JSON.stringify(files, null, 2));
