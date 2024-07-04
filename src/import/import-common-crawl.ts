@@ -1,7 +1,6 @@
 import withCcDomainStream, { listFiles } from "../utils/with-cc-domain-stream";
 import { Store } from "../store/store";
 import { startEta } from "../eta";
-import fs from "node:fs/promises";
 import * as process from "node:process";
 import _ from "lodash";
 
@@ -17,15 +16,11 @@ const readFiles = async (props: ImportCommonCrawlProps) => {
   const files = await listFiles(props.dataset);
 
   if (props.splitListEvery) {
-    await fs.writeFile(
-      "cc-files.json",
-      JSON.stringify(_.chunk(files, props.splitListEvery), null, 2),
-    );
+    console.log(JSON.stringify(_.chunk(files, props.splitListEvery), null, 2));
   } else {
-    await fs.writeFile("cc-files.json", JSON.stringify(files, null, 2));
+    console.log(JSON.stringify(files, null, 2));
   }
 
-  console.log("done");
   process.exit(0);
 };
 

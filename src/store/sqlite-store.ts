@@ -82,7 +82,7 @@ export default class SqliteStore implements Store {
       .addUniqueConstraint("uniqueUrl", ["url"])
       .execute();
 
-    console.log(`SQLite DB initialized at ${path.resolve(this.filePath)}`);
+    //console.debug(`SQLite DB initialized at ${path.resolve(this.filePath)}`);
   }
 
   get db() {
