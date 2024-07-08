@@ -40,7 +40,7 @@ pulumi up
 
 ```bash
 kubectl -n argo port-forward deployment/argo-server 2746:2746
-
+kubectl -n scanweb port-forward service/scanweb-postgres 5433:5433
 ```
 
 6. Open the Argo UI in your browser on [https://localhost:2746](https://localhost:2746)
@@ -49,7 +49,6 @@ kubectl -n argo port-forward deployment/argo-server 2746:2746
 
 ```shell
 argo template -n argo create ./infra/workflows/scan-cc-template.yaml
-kubectl -n scanweb port-forward service/scanweb-postgres 5433:5433
 ```
 
 Or to update it
