@@ -1,14 +1,14 @@
-import zlib from "node:zlib";
-import { pipeline } from "node:stream/promises";
-import { Writable, Transform } from "node:stream";
-import Queue from "promise-queue";
-import { setTimeout } from "node:timers/promises";
-import tryFetch from "./try-fetch";
+import zlib from 'node:zlib';
+import { pipeline } from 'node:stream/promises';
+import { Writable, Transform } from 'node:stream';
+import Queue from 'promise-queue';
+import { setTimeout } from 'node:timers/promises';
+import tryFetch from './try-fetch';
 
 type TransformCallback = (error?: Error | null, data?: any) => void;
 
 export class FullLineStream extends Transform {
-  private lastLineData = "";
+  private lastLineData = '';
 
   constructor() {
     super({
@@ -23,21 +23,21 @@ export class FullLineStream extends Transform {
   ) {
     const str = this.lastLineData + chunk.toString(encoding);
     const lines = str
-      .split("\n")
-      .map((l) => l.replaceAll("\r", ""))
+      .split('\n')
+      .map((l) => l.replaceAll('\r', ''))
       .filter((l) => !!l);
 
-    if (!str.endsWith("\n")) {
-      this.lastLineData = lines.pop() ?? "";
+    if (!str.endsWith('\n')) {
+      this.lastLineData = lines.pop() ?? '';
     } else {
-      this.lastLineData = "";
+      this.lastLineData = '';
     }
     callback(null, lines);
   }
 
   _final(callback: (error?: Error | null) => void) {
     if (this.lastLineData) {
-      this.push([this.lastLineData.replaceAll("\r", "")]);
+      this.push([this.lastLineData.replaceAll('\r', '')]);
     }
     callback();
   }
@@ -54,7 +54,7 @@ const fetchGzipTextFile = async (
   });
 
   if (!response.body) {
-    throw new Error("Common Crawl dataset is not readable");
+    throw new Error('Common Crawl dataset is not readable');
   }
 
   await pipeline(
@@ -94,14 +94,14 @@ const processStream = async (path: string, onDomain: DomainsHandler) => {
       await fetchGzipTextFile(url, async (lines) => {
         const domains: string[] = [];
         for (const line of lines) {
-          if (line.startsWith("WARC-Target-URI: ")) {
+          if (line.startsWith('WARC-Target-URI: ')) {
             const url = line.slice(17);
             const match = url.match(baseDomainRegex);
             if (match && match.length >= 2) {
               domains.push(
                 match[1]
-                  .replace(/^http:\/\/www\./, "http://")
-                  .replace(/^https:\/\/www\./, "https://"),
+                  .replace(/^http:\/\/www\./, 'http://')
+                  .replace(/^https:\/\/www\./, 'https://'),
               );
             }
           }
@@ -142,7 +142,7 @@ const retry = async <T>(callback: () => Promise<T>): Promise<T> => {
   if (lastError) {
     throw lastError;
   }
-  throw new Error("Unexpected retry error");
+  throw new Error('Unexpected retry error');
 };
 
 const fileProcessingTimeout = 1000 * 60 * 60;
@@ -199,7 +199,7 @@ export default async function withCcDomainStream(
 ) {
   let files = props.files ?? (await listFiles(dataset));
   await onCalculatedTotal(files.length);
-  const queue = new Queue(10);
+  const queue = new Queue(4);
   let processed = skip ?? 0;
 
   if (skip) {
