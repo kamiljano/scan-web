@@ -1,14 +1,25 @@
-import { Namespace } from "@pulumi/kubernetes/core/v1";
-import ArgoWorkflows from "./resources/argo-workflows";
-import path from "node:path";
+import { Namespace } from '@pulumi/kubernetes/core/v1';
+import ArgoWorkflows from './resources/argo-workflows';
+import path from 'node:path';
+import ScanWebDb from './resources/scan-web-db';
 
-const namespace = new Namespace("scanweb-namespace", {
+const argoNamespace = new Namespace('argo-namespace', {
   metadata: {
-    name: "argo",
+    name: 'argo',
   },
 });
 
-new ArgoWorkflows("argo", {
-  namespace,
-  workflows: [path.join(__dirname, "workflows", "scan-cc-template.yaml")],
+const scanwebNamespace = new Namespace('scanweb-namespace', {
+  metadata: {
+    name: 'scanweb',
+  },
+});
+
+new ScanWebDb('scan-web-db', {
+  namespace: scanwebNamespace,
+});
+
+new ArgoWorkflows('argo', {
+  namespace: argoNamespace,
+  workflows: [path.join(__dirname, 'workflows', 'scan-cc-template.yaml')],
 });
