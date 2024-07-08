@@ -1,7 +1,7 @@
 import { Namespace } from '@pulumi/kubernetes/core/v1';
 import ArgoWorkflows from './resources/argo-workflows';
 import path from 'node:path';
-import ScanWebDb from './resources/scan-web-db';
+import ScanWeb from './resources/scan-web';
 
 const argoNamespace = new Namespace('argo-namespace', {
   metadata: {
@@ -15,9 +15,9 @@ const scanwebNamespace = new Namespace('scanweb-namespace', {
   },
 });
 
-new ScanWebDb('scan-web-db', {
+new ScanWeb('scan-web-db', {
   namespace: scanwebNamespace,
-});
+}).db.grantAccess('scanweb-postgres-policy', argoNamespace);
 
 new ArgoWorkflows('argo', {
   namespace: argoNamespace,

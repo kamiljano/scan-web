@@ -1,20 +1,24 @@
 import { ComponentResource } from '@pulumi/pulumi';
 import {
   Namespace,
-  PersistentVolume,
   PersistentVolumeClaim,
-  ConfigMap,
   Service,
 } from '@pulumi/kubernetes/core/v1';
-import { StatefulSet, Deployment } from '@pulumi/kubernetes/apps/v1';
+import { Deployment } from '@pulumi/kubernetes/apps/v1';
+import { NetworkPolicy } from '@pulumi/kubernetes/networking/v1';
 
 interface ScanWebDbProps {
   namespace: Namespace;
 }
 
-export default class ScanWebDb extends ComponentResource {
-  constructor(name: string, props: ScanWebDbProps) {
-    super('custom:resource:ScanWebDb', name);
+const postgresSelector = { app: 'postgres' };
+
+export default class ScanWeb extends ComponentResource {
+  constructor(
+    name: string,
+    private readonly props: ScanWebDbProps,
+  ) {
+    super('custom:resource:ScanWeb', name);
 
     const postgresDeployment = new Deployment(
       'postgres-deployment',
@@ -24,11 +28,11 @@ export default class ScanWebDb extends ComponentResource {
           namespace: props.namespace.metadata.name,
         },
         spec: {
-          selector: { matchLabels: { app: 'postgres' } },
+          selector: { matchLabels: postgresSelector },
           replicas: 1,
           template: {
             metadata: {
-              labels: { app: 'postgres' },
+              labels: postgresSelector,
             },
             spec: {
               securityContext: {
@@ -39,9 +43,10 @@ export default class ScanWebDb extends ComponentResource {
                   name: 'postgres',
                   image: 'postgres:latest', // You can specify a different version of PostgreSQL here
                   env: [
-                    { name: 'POSTGRES_DB', value: 'scanweb' }, // Replace with your database name
-                    { name: 'POSTGRES_USER', value: 'scanweb' }, // Replace with your database user
-                    { name: 'POSTGRES_PASSWORD', value: 'scanweb_password' }, // Replace with your database password
+                    // todo: auto-generate the secrets
+                    { name: 'POSTGRES_DB', value: 'scanweb' },
+                    { name: 'POSTGRES_USER', value: 'scanweb' },
+                    { name: 'POSTGRES_PASSWORD', value: 'scanweb_password' },
                   ],
                   ports: [{ containerPort: 5432 }],
                   volumeMounts: [
@@ -96,11 +101,52 @@ export default class ScanWebDb extends ComponentResource {
           namespace: props.namespace.metadata.name,
         },
         spec: {
-          selector: { app: 'postgres' },
+          selector: postgresSelector,
           ports: [{ port: 5433, targetPort: 5432 }],
         },
       },
       { parent: this },
     );
+  }
+
+  get db() {
+    const self = this;
+    return {
+      grantAccess(policyName: string, namespace: Namespace) {
+        new NetworkPolicy(
+          policyName,
+          {
+            metadata: {
+              name: policyName,
+              namespace: self.props.namespace.metadata.name,
+            },
+            spec: {
+              podSelector: { matchLabels: postgresSelector },
+              policyTypes: ['Ingress'],
+              ingress: [
+                {
+                  from: [
+                    {
+                      namespaceSelector: {
+                        matchLabels: {
+                          name: namespace.metadata.name,
+                        },
+                      },
+                    },
+                  ],
+                  ports: [
+                    {
+                      protocol: 'TCP',
+                      port: 5433,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          { parent: self },
+        );
+      },
+    };
   }
 }
