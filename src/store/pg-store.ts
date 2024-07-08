@@ -1,36 +1,35 @@
-import Database from 'better-sqlite3';
-import { Kysely, SqliteDialect, CamelCasePlugin, sql } from 'kysely';
+import { Pool, types } from 'pg';
+import { Kysely, PostgresDialect, sql } from 'kysely';
 import KyselyStore, { Db } from './kysely-store';
 import { StoreValue } from './store';
 
-const isRunningOnBun = () => !!process.versions.bun;
+types.setTypeParser(types.builtins.INT8, (val) => parseInt(val, 10));
+types.setTypeParser(types.builtins.INT2, (val) => parseInt(val, 10));
+types.setTypeParser(types.builtins.INT4, (val) => parseInt(val, 10));
+types.setTypeParser(types.builtins.NUMERIC, (val) => Number(val));
 
-const getSqlDialect = async (filePath: string) => {
-  if (isRunningOnBun()) {
-    const [bunSqlite, bunKysely] = await Promise.all([
-      import('bun:sqlite'),
-      import('kysely-bun-sqlite'),
-    ]);
-
-    const bunDb = new bunSqlite.Database(filePath);
-
-    return new bunKysely.default.BunSqliteDialect({ database: bunDb });
-  }
-
-  return new SqliteDialect({ database: new Database(filePath) });
-};
-
-export default class SqliteStore extends KyselyStore {
+export default class PgStore extends KyselyStore {
   #db: Kysely<Db> | undefined;
+  private readonly connectionString: string;
 
-  constructor(private readonly filePath: string) {
+  constructor(connectionString: string) {
     super();
+
+    this.connectionString = connectionString.startsWith('postgresql://')
+      ? connectionString
+      : `postgresql://${connectionString}`;
   }
 
-  async initConnection() {
+  initConnection() {
+    const dialect = new PostgresDialect({
+      pool: new Pool({
+        connectionString: this.connectionString,
+        max: 10,
+      }),
+    });
+
     this.#db = new Kysely<Db>({
-      dialect: await getSqlDialect(this.filePath),
-      plugins: [new CamelCasePlugin()],
+      dialect,
     });
   }
 
@@ -38,9 +37,7 @@ export default class SqliteStore extends KyselyStore {
     await this.db.schema
       .createTable('sites')
       .ifNotExists()
-      .addColumn('id', 'integer', (cb) =>
-        cb.primaryKey().autoIncrement().notNull(),
-      )
+      .addColumn('id', 'bigserial', (cb) => cb.primaryKey().notNull())
       .addColumn('url', 'text', (cb) => cb.notNull())
       .addColumn('meta', 'json', (cb) => cb.notNull().defaultTo('{}'))
       .addUniqueConstraint('uniqueUrl', ['url'])
@@ -59,7 +56,7 @@ export default class SqliteStore extends KyselyStore {
     if (typeof val === 'string') {
       await this.db
         .insertInto('sites')
-        .values({ url: val, meta: sql`json('{}')` })
+        .values({ url: val, meta: sql`'{}'::json` })
         .onConflict((cb) => cb.column('url').doNothing())
         .execute();
       return;
@@ -71,11 +68,11 @@ export default class SqliteStore extends KyselyStore {
       .insertInto('sites')
       .values({
         url: val.url,
-        meta: sql`json(${meta})`,
+        meta: sql`${meta}::json`,
       })
       .onConflict((cb) =>
         cb.column('url').doUpdateSet({
-          meta: sql`json_patch(meta, ${meta})`,
+          meta: sql`(sites.meta::jsonb || ${meta}::jsonb)::json`,
         }),
       )
       .execute();
