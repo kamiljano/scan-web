@@ -124,7 +124,7 @@ interface CCStreamHandlers {
 
 const retry = async <T>(callback: () => Promise<T>): Promise<T> => {
   let lastError: Error | undefined;
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 100; i++) {
     try {
       return await callback();
     } catch (e) {
