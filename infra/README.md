@@ -56,3 +56,12 @@ Or to update it
 ```shell
 (argo template delete scan-cc -n argo || true) && argo template -n argo create ./infra/workflows/scan-cc-template.yaml
 ```
+
+7. Jumpbox
+
+If you need to debug anything regarding the network, it's convenient to be able to get into one of the VMs running in that network.
+For this reason a jumpbox pod is created when you run the application on minikube. You can access it with the following command:
+
+```shell
+kubectl -n argo exec --stdin --tty jumpbox -- /bin/bash
+```

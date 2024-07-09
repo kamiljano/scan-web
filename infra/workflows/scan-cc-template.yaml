@@ -101,5 +101,5 @@ spec:
         command: [sh, -c]
         args:
           [
-            "apt-get update && apt-get install jq -y && mkdir -p /mnt/build && tar xzf /tmp/build-artifacts.tar.gz -C /mnt/build && node /mnt/build/dist/src/index.js scan commoncrawl -c git -d latest --fromBatchFile /mnt/batches.json --batchId $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.batchId')",
+            "apt-get update && apt-get install jq -y && mkdir -p /mnt/build && tar xzf /tmp/build-artifacts.tar.gz -C /mnt/build && node /mnt/build/dist/src/index.js import commoncrawl -d latest --fromBatchFile /mnt/batches.json --batchId $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.batchId') -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb",
           ]
