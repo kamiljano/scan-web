@@ -89,33 +89,26 @@ type DomainsHandler = (domains: string[]) => void | Promise<void>;
 
 const processStream = async (path: string, onDomain: DomainsHandler) => {
   const url = `https://data.commoncrawl.org/${path}`;
-  for (let i = 0; i < 10; i++) {
-    try {
-      await fetchGzipTextFile(url, async (lines) => {
-        const domains: string[] = [];
-        for (const line of lines) {
-          if (line.startsWith('WARC-Target-URI: ')) {
-            const url = line.slice(17);
-            const match = url.match(baseDomainRegex);
-            if (match && match.length >= 2) {
-              domains.push(
-                match[1]
-                  .replace(/^http:\/\/www\./, 'http://')
-                  .replace(/^https:\/\/www\./, 'https://'),
-              );
-            }
-          }
+  await fetchGzipTextFile(url, async (lines) => {
+    const domains: string[] = [];
+    for (const line of lines) {
+      if (line.startsWith('WARC-Target-URI: ')) {
+        const url = line.slice(17);
+        const match = url.match(baseDomainRegex);
+        if (match && match.length >= 2) {
+          domains.push(
+            match[1]
+              .replace(/^http:\/\/www\./, 'http://')
+              .replace(/^https:\/\/www\./, 'https://'),
+          );
         }
-
-        if (domains.length) {
-          await onDomain(domains);
-        }
-      });
-    } catch (e) {
-      console.error(`Failed to process ${url}, retrying...`, e);
-      await setTimeout(5000);
+      }
     }
-  }
+
+    if (domains.length) {
+      await onDomain(domains);
+    }
+  });
 };
 
 interface CCStreamProgress {
@@ -131,12 +124,12 @@ interface CCStreamHandlers {
 
 const retry = async <T>(callback: () => Promise<T>): Promise<T> => {
   let lastError: Error | undefined;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 10; i++) {
     try {
       return await callback();
     } catch (e) {
       lastError = e as Error;
-      await setTimeout(5000);
+      await setTimeout(10_000 * i);
     }
   }
   if (lastError) {
@@ -199,7 +192,7 @@ export default async function withCcDomainStream(
 ) {
   let files = props.files ?? (await listFiles(dataset));
   await onCalculatedTotal(files.length);
-  const queue = new Queue(4);
+  const queue = new Queue(2);
   let processed = skip ?? 0;
 
   if (skip) {
