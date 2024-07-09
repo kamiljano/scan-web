@@ -65,3 +65,9 @@ For this reason a jumpbox pod is created when you run the application on minikub
 ```shell
 kubectl -n argo exec --stdin --tty jumpbox -- /bin/bash
 ```
+
+Then you can connect to the db for instance with
+
+```shell
+psql -d scanweb -p 5433 -U scanweb -h scanweb-postgres.scanweb.svc.cluster.local
+```
