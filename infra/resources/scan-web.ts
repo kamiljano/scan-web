@@ -81,7 +81,7 @@ export default class ScanWeb extends ComponentResource {
           namespace: props.namespace.metadata.name,
         },
         spec: {
-          accessModes: ['ReadWriteMany'],
+          accessModes: ['ReadWriteOnce'],
           resources: {
             requests: {
               storage: '5Gi', // You can adjust the storage size here
