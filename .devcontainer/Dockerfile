@@ -26,3 +26,5 @@ RUN sudo apt-get install -y kubectl
 RUN sudo apt update -y
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash && sudo apt install -y nodejs
 RUN sudo npm install -g pnpm@9.1.1
+
+RUN git config --global --add safe.directory /workspaces/scan-web
