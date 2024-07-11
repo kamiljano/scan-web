@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: scan-cc
+  name: import-cc-to-file-parallel-to-file
   namespace: argo
 spec:
   entrypoint: main
@@ -101,5 +101,9 @@ spec:
         command: [sh, -c]
         args:
           [
-            "apt-get update && apt-get install jq -y && mkdir -p /mnt/build && tar xzf /tmp/build-artifacts.tar.gz -C /mnt/build && node /mnt/build/dist/src/index.js import commoncrawl -d latest --fromBatchFile /mnt/batches.json --batchId $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.batchId') -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb",
+            "apt-get update && apt-get install jq -y && mkdir -p /mnt/build && tar xzf /tmp/build-artifacts.tar.gz -C /mnt/build && cd /mnt/build/ && node ./dist/src/index.js import commoncrawl -d latest --fromBatchFile /mnt/batches.json --batchId $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.batchId')",
           ]
+      outputs:
+        artifacts:
+          - name: db
+            path: /mnt/build/db.sql

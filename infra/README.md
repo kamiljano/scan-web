@@ -48,13 +48,13 @@ kubectl -n scanweb port-forward service/scanweb-postgres 5433:5433
 ## Submitting a workflow template
 
 ```shell
-argo template -n argo create ./infra/workflows/scan-cc-template.yaml
+argo template -n argo create ./infra/workflows/import-cc-template.yaml
 ```
 
 Or to update it
 
 ```shell
-(argo template delete scan-cc -n argo || true) && argo template -n argo create ./infra/workflows/scan-cc-template.yaml
+(argo template delete import-cc-template -n argo || true) && argo template -n argo create ./infra/workflows/import-cc-template.yaml
 ```
 
 7. Jumpbox

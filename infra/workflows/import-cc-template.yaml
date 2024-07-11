@@ -1,0 +1,105 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: import-cc-template
+  namespace: argo
+spec:
+  entrypoint: main
+  templates:
+    - name: main
+      steps:
+        - - name: clone-and-build
+            template: clone-and-build-template
+        - - name: generate-file-list
+            template: generate-file-list-template
+            arguments:
+              artifacts:
+                - name: build-artifacts
+                  from: '{{steps.clone-and-build.outputs.artifacts.build-artifacts}}'
+        - - name: split-batches
+            template: split-batches-template
+            arguments:
+              artifacts:
+                - name: file-list
+                  from: '{{steps.generate-file-list.outputs.artifacts.file-list}}'
+        - - name: scan-web
+            template: scan-web-template
+            arguments:
+              artifacts:
+                - name: file-list
+                  from: '{{steps.generate-file-list.outputs.artifacts.file-list}}'
+                - name: build-artifacts
+                  from: '{{steps.clone-and-build.outputs.artifacts.build-artifacts}}'
+              parameters:
+                - name: batch-definition
+                  value: '{{item}}'
+            withParam: '{{steps.split-batches.outputs.result}}'
+
+    - name: clone-and-build-template
+      container:
+        image: node:latest
+        command: ['/bin/sh', '-c']
+        args:
+          [
+            'git clone --depth 1 https://github.com/kamiljano/scan-web.git && cd scan-web && npm install && npm run build && tar czf /tmp/build-artifacts.tar.gz .',
+          ]
+      outputs:
+        artifacts:
+          - name: build-artifacts
+            path: /tmp/build-artifacts.tar.gz
+
+    - name: generate-file-list-template
+      inputs:
+        artifacts:
+          - name: build-artifacts
+            path: /mnt/build-artifacts.tar.gz
+      container:
+        image: node:latest
+        command: ['/bin/sh', '-c']
+        args:
+          [
+            'mkdir -p /mnt/build && tar xzf /mnt/build-artifacts.tar.gz -C /mnt/build && cd /mnt/build && node dist/src/index.js import commoncrawl -d latest --only-list --split-list-every 10000 > batches.json',
+          ]
+      outputs:
+        artifacts:
+          - name: file-list
+            path: /mnt/build/batches.json
+
+    - name: split-batches-template
+      inputs:
+        artifacts:
+          - name: file-list
+            path: /mnt/batches.json
+      script:
+        image: python:3.9
+        command: [python]
+        source: |
+          import json
+          import os
+          import sys
+
+          with open("/mnt/batches.json", "r") as f:
+              batches = json.load(f)
+
+          batch_names = []
+          for idx, batch in enumerate(batches):
+              batch_names.append({"name": f"batch-{idx}", "batchId": idx})
+
+          json.dump(batch_names, sys.stdout)
+
+    - name: scan-web-template
+      inputs:
+        parameters:
+          - name: batch-definition
+        artifacts:
+          - name: file-list
+            path: /mnt/batches.json
+          - name: build-artifacts
+            path: /tmp/build-artifacts.tar.gz
+      container:
+        image: node:latest
+        command: [sh, -c]
+        args:
+          [
+            "apt-get update && apt-get install jq -y && mkdir -p /mnt/build && tar xzf /tmp/build-artifacts.tar.gz -C /mnt/build && node /mnt/build/dist/src/index.js import commoncrawl -d latest --fromBatchFile /mnt/batches.json --batchId $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.batchId') -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb",
+          ]

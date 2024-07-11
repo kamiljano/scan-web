@@ -32,5 +32,13 @@ new ScanWeb('scan-web-db', {
 
 new ArgoWorkflows('argo', {
   namespace: argoNamespace,
-  workflows: [path.join(__dirname, 'workflows', 'scan-cc-template.yaml')],
+  workflows: [
+    path.join(__dirname, 'workflows', 'import-cc-template.yaml'),
+    path.join(
+      __dirname,
+      'workflows',
+      'import-cc-to-file-parallel-to-file.yaml',
+    ),
+    path.join(__dirname, 'workflows', 'import-cc-to-file-template.yaml'),
+  ],
 });

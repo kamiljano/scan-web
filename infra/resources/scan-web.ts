@@ -47,6 +47,10 @@ export default class ScanWeb extends ComponentResource {
                     { name: 'POSTGRES_DB', value: 'scanweb' },
                     { name: 'POSTGRES_USER', value: 'scanweb' },
                     { name: 'POSTGRES_PASSWORD', value: 'scanweb_password' },
+                    {
+                      name: 'PGDATA',
+                      value: '/var/lib/postgresql/data/pgdata',
+                    },
                   ],
                   ports: [{ containerPort: 5432 }],
                   volumeMounts: [
