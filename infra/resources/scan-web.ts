@@ -88,7 +88,7 @@ export default class ScanWeb extends ComponentResource {
           accessModes: ['ReadWriteOnce'],
           resources: {
             requests: {
-              storage: '5Gi', // You can adjust the storage size here
+              storage: '100Gi', // You can adjust the storage size here
             },
           },
         },
