@@ -28,7 +28,7 @@ if (isMinikube) {
 
 new ScanWeb('scan-web-db', {
   namespace: scanwebNamespace,
-}).db.grantAccess('scanweb-postgres-policy', argoNamespace);
+});
 
 new ArgoWorkflows('argo', {
   namespace: argoNamespace,

@@ -112,45 +112,4 @@ export default class ScanWeb extends ComponentResource {
       { parent: this },
     );
   }
-
-  get db() {
-    const self = this;
-    return {
-      grantAccess(policyName: string, namespace: Namespace) {
-        new NetworkPolicy(
-          policyName,
-          {
-            metadata: {
-              name: policyName,
-              namespace: self.props.namespace.metadata.name,
-            },
-            spec: {
-              podSelector: { matchLabels: postgresSelector },
-              policyTypes: ['Ingress'],
-              ingress: [
-                {
-                  from: [
-                    {
-                      namespaceSelector: {
-                        matchLabels: {
-                          name: namespace.metadata.name,
-                        },
-                      },
-                    },
-                  ],
-                  ports: [
-                    {
-                      protocol: 'TCP',
-                      port: 5433,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-          { parent: self },
-        );
-      },
-    };
-  }
 }

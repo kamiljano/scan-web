@@ -10,6 +10,9 @@ export default class Jumpbox extends Pod {
       metadata: {
         name: id,
         namespace: props.namespace.metadata.name,
+        labels: {
+          name: 'jumpbox',
+        },
       },
       spec: {
         containers: [
