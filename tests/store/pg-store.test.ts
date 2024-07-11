@@ -2,9 +2,7 @@ import { describe, test, beforeAll, expect, afterEach } from 'vitest';
 import PgStore from '../../src/store/pg-store';
 
 describe('pg-store', () => {
-  const store = new PgStore(
-    'postgresql://scanweb:scanweb_password@localhost:5433/scanweb',
-  );
+  const store = new PgStore('postgresql://postgres:password@localhost:5432');
 
   beforeAll(async () => {
     await store.init();
