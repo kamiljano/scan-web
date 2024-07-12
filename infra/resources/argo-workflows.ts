@@ -2,7 +2,7 @@ import { ComponentResource } from '@pulumi/pulumi';
 import * as fs from 'node:fs';
 import { CustomResource } from '@pulumi/kubernetes/apiextensions';
 import * as yaml from 'js-yaml';
-import { Namespace } from '@pulumi/kubernetes/core/v1';
+import { ConfigMap, Namespace } from '@pulumi/kubernetes/core/v1';
 import { ConfigFile } from '@pulumi/kubernetes/yaml';
 import * as path from 'node:path';
 

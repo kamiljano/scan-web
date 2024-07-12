@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: test
+  namespace: argo
+spec:
+  entrypoint: main
+  templates:
+    - name: main
+      steps:
+        - - name: clone-and-build
+            template: clone-and-build-template
+
+    - name: clone-and-build-template
+      container:
+        image: 10.104.84.38:5000/scanweb:latest
+        command: ['/bin/sh', '-c']
+        args: ['echo "lol"']
+        imagePullPolicy: Always

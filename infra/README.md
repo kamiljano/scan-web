@@ -40,6 +40,7 @@ pulumi up
 
 ```bash
 kubectl -n argo port-forward deployment/argo-server 2746:2746
+kubectl -n scanweb port-forward service/docker-registry 5000:5000
 kubectl -n scanweb port-forward service/scanweb-postgres 5433:5433
 ```
 

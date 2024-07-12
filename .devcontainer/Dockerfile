@@ -27,4 +27,15 @@ RUN sudo apt update -y
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash && sudo apt install -y nodejs
 RUN sudo npm install -g pnpm@9.1.1
 
+# Install Argo
+RUN curl -sLO https://github.com/argoproj/argo-workflows/releases/download/v3.5.8/argo-linux-amd64.gz
+RUN gunzip argo-linux-amd64.gz
+RUN chmod +x argo-linux-amd64
+RUN sudo mv ./argo-linux-amd64 /usr/local/bin/argo
+
 RUN git config --global --add safe.directory /workspaces/scan-web
+
+# Install doctl
+RUN wget https://github.com/digitalocean/doctl/releases/download/v1.104.0/doctl-1.104.0-linux-amd64.tar.gz
+RUN tar xf ~/doctl-1.104.0-linux-amd64.tar.gz
+RUN sudo mv ~/doctl /usr/local/bin
