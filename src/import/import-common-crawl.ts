@@ -4,6 +4,7 @@ import { startEta } from '../eta';
 import * as process from 'node:process';
 import _ from 'lodash';
 import fs from 'node:fs';
+import Batch from 'src/utils/batch';
 
 interface ImportCommonCrawlProps {
   dataset: string;
@@ -43,6 +44,14 @@ const importDomains = async (props: ImportCommonCrawlProps) => {
     }
   }
 
+  const batch = new Batch<string>(500, async (urls) => {
+    await Promise.all(
+      props.stores.map((store) => {
+        store.insertUrls(urls);
+      }),
+    );
+  });
+
   await withCcDomainStream(
     props.dataset,
     {
@@ -51,11 +60,7 @@ const importDomains = async (props: ImportCommonCrawlProps) => {
     },
     {
       async onDomain(domains) {
-        await Promise.allSettled(
-          domains.flatMap((domain) =>
-            props.stores.map((store) => store.store(domain)),
-          ),
-        );
+        await batch.add(domains);
       },
       onCalculatedTotal(total) {
         console.log(`Total Common Crawl data files: ${total}`);
@@ -70,6 +75,8 @@ const importDomains = async (props: ImportCommonCrawlProps) => {
       },
     },
   );
+
+  await batch.finish();
 };
 
 export default async function importCommonCrawl(props: ImportCommonCrawlProps) {

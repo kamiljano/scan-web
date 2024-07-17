@@ -1,6 +1,6 @@
-import console from "node:console";
-import { CheckerSuccessMeta } from "./scan/checkers/checker";
-import { Store } from "./store/store";
+import console from 'node:console';
+import { CheckerSuccessMeta } from './scan/checkers/checker';
+import { Store } from './store/store';
 
 export interface SuccessfulScanResult {
   checker: string;
@@ -19,7 +19,7 @@ export const onSuccess = async (
     await Promise.all(
       stores.flatMap(async (store) => {
         return result.flatMap(async (r) => {
-          await store.store({
+          await store.insertScan({
             url,
             source: r.checker,
             meta: r.meta,

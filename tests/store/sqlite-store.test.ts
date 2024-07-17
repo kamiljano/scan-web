@@ -2,7 +2,7 @@ import { describe, test, beforeAll, expect, afterEach } from 'vitest';
 import SqliteStore from '../../src/store/sqlite-store';
 
 describe('sqlite-store', () => {
-  const store = new SqliteStore(':memory:');
+  const store = SqliteStore.inMemory();
 
   beforeAll(async () => {
     await store.init();
@@ -12,10 +12,31 @@ describe('sqlite-store', () => {
     await store.clear();
   });
 
+  test('insertUrls', async () => {
+    await store.insertUrls([
+      'http://example.com',
+      'http://example.com',
+      'http://example2.com',
+    ]);
+    await store.insertUrls(['http://example.com']);
+
+    const result = await store.listDomains();
+    expect(result).toEqual([
+      {
+        id: expect.any(Number),
+        url: 'http://example.com',
+      },
+      {
+        id: expect.any(Number),
+        url: 'http://example2.com',
+      },
+    ]);
+  });
+
   test('iterateUrls', async () => {
     const promises: Promise<unknown>[] = [];
     for (let i = 0; i < 1100; i++) {
-      promises.push(store.store(`http://example${i}.com`));
+      promises.push(store.insertUrls([`http://example${i}.com`]));
     }
     await Promise.all(promises);
 
@@ -28,7 +49,7 @@ describe('sqlite-store', () => {
   });
 
   test('new record should be created', async () => {
-    await store.store({
+    await store.insertScan({
       url: 'http://example.com',
       source: 'testSource',
       meta: {
@@ -36,23 +57,22 @@ describe('sqlite-store', () => {
       },
     });
 
-    const result = await store.list();
+    const result = await store.listScanResults();
 
     expect(result).toEqual([
       {
         id: expect.any(Number),
         url: 'http://example.com',
+        checker: 'testSource',
         meta: {
-          testSource: {
-            key: 'value',
-          },
+          key: 'value',
         },
       },
     ]);
   });
 
   test('the old value should be updated', async () => {
-    await store.store({
+    await store.insertScan({
       url: 'http://example.com',
       source: 'testSource',
       meta: {
@@ -60,7 +80,7 @@ describe('sqlite-store', () => {
       },
     });
 
-    await store.store({
+    await store.insertScan({
       url: 'http://example.com',
       source: 'testSource',
       meta: {
@@ -68,16 +88,15 @@ describe('sqlite-store', () => {
       },
     });
 
-    const result = await store.list();
+    const result = await store.listScanResults();
 
     expect(result).toEqual([
       {
         id: expect.any(Number),
         url: 'http://example.com',
+        checker: 'testSource',
         meta: {
-          testSource: {
-            key: 'value2',
-          },
+          key: 'value2',
         },
       },
     ]);
@@ -85,35 +104,39 @@ describe('sqlite-store', () => {
 
   test('the record should be updated', async () => {
     await Promise.all([
-      store.store({
+      store.insertScan({
         url: 'http://example.com',
         source: 'testSource1',
         meta: {
-          key: 'value',
+          key: 'value1',
         },
       }),
-      store.store({
+      store.insertScan({
         url: 'http://example.com',
         source: 'testSource2',
         meta: {
-          key: 'value',
+          key: 'value2',
         },
       }),
     ]);
 
-    const result = await store.list();
+    const result = await store.listScanResults();
 
     expect(result).toEqual([
       {
         id: expect.any(Number),
         url: 'http://example.com',
+        checker: 'testSource1',
         meta: {
-          testSource1: {
-            key: 'value',
-          },
-          testSource2: {
-            key: 'value',
-          },
+          key: 'value1',
+        },
+      },
+      {
+        id: expect.any(Number),
+        url: 'http://example.com',
+        checker: 'testSource2',
+        meta: {
+          key: 'value2',
         },
       },
     ]);

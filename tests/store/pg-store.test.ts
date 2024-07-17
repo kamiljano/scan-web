@@ -13,7 +13,7 @@ describe('pg-store', () => {
   });
 
   test('new record should be created', async () => {
-    await store.store({
+    await store.insertScan({
       url: 'http://example.com',
       source: 'testSource',
       meta: {
@@ -21,23 +21,22 @@ describe('pg-store', () => {
       },
     });
 
-    const result = await store.list();
+    const result = await store.listScanResults();
 
     expect(result).toEqual([
       {
         id: expect.any(Number),
         url: 'http://example.com',
+        checker: 'testSource',
         meta: {
-          testSource: {
-            key: 'value',
-          },
+          key: 'value',
         },
       },
     ]);
   });
 
   test('the old value should be updated', async () => {
-    await store.store({
+    await store.insertScan({
       url: 'http://example.com',
       source: 'testSource',
       meta: {
@@ -45,7 +44,7 @@ describe('pg-store', () => {
       },
     });
 
-    await store.store({
+    await store.insertScan({
       url: 'http://example.com',
       source: 'testSource',
       meta: {
@@ -53,16 +52,15 @@ describe('pg-store', () => {
       },
     });
 
-    const result = await store.list();
+    const result = await store.listScanResults();
 
     expect(result).toEqual([
       {
         id: expect.any(Number),
+        checker: 'testSource',
         url: 'http://example.com',
         meta: {
-          testSource: {
-            key: 'value2',
-          },
+          key: 'value2',
         },
       },
     ]);

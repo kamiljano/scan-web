@@ -1,4 +1,4 @@
-import { Store, StoreValue } from './store';
+import { Store, ScannedSite } from './store';
 import { Generated, Kysely } from 'kysely';
 
 const ITERATION_BATCH_SIZE = 1000;
@@ -6,11 +6,19 @@ const ITERATION_BATCH_SIZE = 1000;
 export interface SiteRecord {
   id: Generated<number>;
   url: string;
-  meta: Record<string, Record<string, string>>;
+  lastUpdated: Generated<string>;
+}
+
+export interface ScanRecord {
+  id: Generated<number>;
+  siteId: number;
+  checker: string;
+  meta: Record<string, boolean | string | number | string[]>;
 }
 
 export interface Db {
   sites: SiteRecord;
+  scans: ScanRecord;
 }
 
 export default abstract class KyselyStore implements Store {
@@ -23,9 +31,18 @@ export default abstract class KyselyStore implements Store {
 
     await this.initSchema();
   }
+
   abstract get db(): Kysely<Db>;
 
-  abstract store(val: StoreValue): Promise<void>;
+  abstract insertScan(val: ScannedSite): Promise<void>;
+
+  async insertUrls(url: string[]) {
+    await this.db
+      .insertInto('sites')
+      .values(url.map((u) => ({ url: u })))
+      .onConflict((cb) => cb.column('url').doNothing())
+      .execute();
+  }
 
   async countRecords() {
     const result = await this.db
@@ -55,12 +72,23 @@ export default abstract class KyselyStore implements Store {
     } while (lastResult.length === ITERATION_BATCH_SIZE);
   }
 
-  async list() {
-    const result = await this.db.selectFrom('sites').selectAll().execute();
+  listDomains() {
+    return this.db.selectFrom('sites').select(['id', 'url']).execute();
+  }
 
-    return result.map((r) => ({
-      ...r,
-      meta: typeof r.meta === 'string' ? JSON.parse(r.meta) : r.meta,
+  async listScanResults() {
+    const result = await this.db
+      .selectFrom('scans')
+      .leftJoin('sites', 'scans.siteId', 'sites.id')
+      .select(['sites.id', 'sites.url', 'scans.meta', 'scans.checker'])
+      .execute();
+
+    return result.map((row) => ({
+      ...row,
+      meta:
+        typeof row.meta === 'object'
+          ? row.meta
+          : JSON.parse(row.meta as unknown as string),
     }));
   }
 

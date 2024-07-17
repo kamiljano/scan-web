@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { Kysely, SqliteDialect, CamelCasePlugin, sql } from 'kysely';
 import KyselyStore, { Db } from './kysely-store';
-import { StoreValue } from './store';
+import { ScannedSite } from './store';
 
 const isRunningOnBun = () => !!process.versions.bun;
 
@@ -23,6 +23,10 @@ const getSqlDialect = async (filePath: string) => {
 export default class SqliteStore extends KyselyStore {
   #db: Kysely<Db> | undefined;
 
+  static inMemory() {
+    return new SqliteStore(':memory:');
+  }
+
   constructor(private readonly filePath: string) {
     super();
   }
@@ -42,8 +46,24 @@ export default class SqliteStore extends KyselyStore {
         cb.primaryKey().autoIncrement().notNull(),
       )
       .addColumn('url', 'text', (cb) => cb.notNull())
-      .addColumn('meta', 'json', (cb) => cb.notNull().defaultTo('{}'))
+      .addColumn('lastUpdated', 'timestamp', (cb) =>
+        cb.defaultTo(sql`CURRENT_TIMESTAMP`),
+      )
       .addUniqueConstraint('uniqueUrl', ['url'])
+      .execute();
+
+    await this.db.schema
+      .createTable('scans')
+      .ifNotExists()
+      .addColumn('id', 'integer', (cb) =>
+        cb.primaryKey().autoIncrement().notNull(),
+      )
+      .addColumn('siteId', 'integer', (cb) =>
+        cb.notNull().references('sites.id').onDelete('cascade'),
+      )
+      .addColumn('checker', 'text', (cb) => cb.notNull())
+      .addColumn('meta', 'json', (cb) => cb.notNull())
+      .addUniqueConstraint('uniqueScan', ['siteId', 'checker'])
       .execute();
   }
 
@@ -55,29 +75,25 @@ export default class SqliteStore extends KyselyStore {
     return this.#db;
   }
 
-  async store(val: StoreValue) {
-    if (typeof val === 'string') {
-      await this.db
+  async insertScan(val: ScannedSite) {
+    await this.db.transaction().execute(async (tx) => {
+      const siteResult = await tx
         .insertInto('sites')
-        .values({ url: val, meta: sql`json('{}')` })
-        .onConflict((cb) => cb.column('url').doNothing())
+        .values([{ url: val.url }])
+        .onConflict((cb) =>
+          cb.column('url').doUpdateSet({ lastUpdated: sql`CURRENT_TIMESTAMP` }),
+        )
+        .returning('id')
         .execute();
-      return;
-    }
-    const meta = JSON.stringify({
-      [val.source]: val.meta,
+
+      const meta = JSON.stringify(val.meta);
+      await sql`
+        insert into scans (site_id, checker, meta) values (
+          ${siteResult[0].id},
+          ${val.source},
+          json(${meta})
+        ) on conflict(site_id, checker) do update set meta = json_patch(scans.meta, ${meta})
+      `.execute(tx);
     });
-    await this.db
-      .insertInto('sites')
-      .values({
-        url: val.url,
-        meta: sql`json(${meta})`,
-      })
-      .onConflict((cb) =>
-        cb.column('url').doUpdateSet({
-          meta: sql`json_patch(meta, ${meta})`,
-        }),
-      )
-      .execute();
   }
 }
