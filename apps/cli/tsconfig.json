@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": ".",
+    "outDir": "dist",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "alwaysStrict": true,
+    "noImplicitReturns": true,
+    "strict": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["es2023"],
+    "target": "es2022",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"]
+}

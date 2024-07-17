@@ -39,3 +39,6 @@ RUN git config --global --add safe.directory /workspaces/scan-web
 RUN wget https://github.com/digitalocean/doctl/releases/download/v1.104.0/doctl-1.104.0-linux-amd64.tar.gz
 RUN tar xf ~/doctl-1.104.0-linux-amd64.tar.gz
 RUN sudo mv ~/doctl /usr/local/bin
+
+# Install bun
+RUN curl -fsSL https://bun.sh/install | bash

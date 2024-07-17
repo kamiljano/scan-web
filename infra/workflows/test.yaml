@@ -15,5 +15,8 @@ spec:
       container:
         image: 10.104.84.38:5000/scanweb:latest
         command: ['/bin/sh', '-c']
-        args: ['echo "lol"']
+        args:
+          [
+            'sw import commoncrawl -d latest -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb',
+          ]
         imagePullPolicy: Always

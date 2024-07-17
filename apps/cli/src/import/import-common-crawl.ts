@@ -1,34 +1,21 @@
 import withCcDomainStream, { listFiles } from '../utils/with-cc-domain-stream';
 import { Store } from '../store/store';
 import { startEta } from '../eta';
-import * as process from 'node:process';
 import _ from 'lodash';
 import fs from 'node:fs';
 import Batch from 'src/utils/batch';
 
 interface ImportCommonCrawlProps {
-  dataset: string;
+  dataset: string | undefined;
   stores: Store[];
   skip: number;
-  onlyList: boolean;
-  splitListEvery: number | undefined;
   batchId: number | undefined;
   fromBatchFile: string | undefined;
 }
 
-const readFiles = async (props: ImportCommonCrawlProps) => {
-  const files = await listFiles(props.dataset);
+const readFiles = async (props: ImportCommonCrawlProps) => {};
 
-  if (props.splitListEvery) {
-    console.log(JSON.stringify(_.chunk(files, props.splitListEvery), null, 2));
-  } else {
-    console.log(JSON.stringify(files, null, 2));
-  }
-
-  process.exit(0);
-};
-
-const importDomains = async (props: ImportCommonCrawlProps) => {
+export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
   let eta: ReturnType<typeof startEta>;
 
   let files: string[] | undefined = undefined;
@@ -53,11 +40,9 @@ const importDomains = async (props: ImportCommonCrawlProps) => {
   });
 
   await withCcDomainStream(
-    props.dataset,
-    {
-      skip: props.skip,
-      files,
-    },
+    props.dataset
+      ? { dataset: props.dataset, skip: props.skip }
+      : { files: files as string[], skip: props.skip },
     {
       async onDomain(domains) {
         await batch.add(domains);
@@ -77,12 +62,4 @@ const importDomains = async (props: ImportCommonCrawlProps) => {
   );
 
   await batch.finish();
-};
-
-export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
-  if (props.onlyList) {
-    await readFiles(props);
-  } else {
-    await importDomains(props);
-  }
 }

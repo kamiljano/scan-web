@@ -1,4 +1,3 @@
-import Database from 'better-sqlite3';
 import { Kysely, SqliteDialect, CamelCasePlugin, sql } from 'kysely';
 import KyselyStore, { Db } from './kysely-store';
 import { ScannedSite } from './store';
@@ -17,7 +16,9 @@ const getSqlDialect = async (filePath: string) => {
     return new bunKysely.default.BunSqliteDialect({ database: bunDb });
   }
 
-  return new SqliteDialect({ database: new Database(filePath) });
+  const sqlite = await import('better-sqlite3');
+
+  return new SqliteDialect({ database: new sqlite.default(filePath) });
 };
 
 export default class SqliteStore extends KyselyStore {

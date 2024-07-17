@@ -1,5 +1,7 @@
+#! /usr/bin/env bun
+
 import 'source-map-support/register';
-import yargs from 'yargs';
+import yargs, { demandOption } from 'yargs';
 import { CheckerMap, checkerMap } from './scan/checkers';
 import ipScan from './scan/scan-ips/ip-scan';
 import { stores } from './store';
@@ -12,6 +14,7 @@ import scanDatastore from './scan/datastore/scan-datastore';
 import * as fs from 'node:fs';
 import investigateProjectCli from './investigate/investigate-project/investigate-project-cli';
 import downloadCommonCrawl from './download/download-common-crawl';
+import prepareCcImport from './prepare/import/cc-prepare-import';
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -312,52 +315,60 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
     'commoncrawl',
     'Imports domains from the Common Crawl dataset and stores them in the datastore. Once provided as input, you can use the db scan command for faster performance than scanning the commoncrawl for instance',
     async (ccArgs) => {
-      return ccArgs.options({
-        dataset: await commonCrawlOptions.dataset(),
-        skip: {
-          alias: 'n',
-          type: 'number',
-          describe:
-            'The number of dataset files to skip. Useful when resuming a import',
-          default: 0,
-          array: false,
-        },
-        onlyList: {
-          type: 'boolean',
-          default: false,
-          description: 'If specified, only the file list will be imported',
-          array: false,
-        },
-        splitListEvery: {
-          type: 'number',
-          description:
-            "Applicable only when onlyList is specified. The list will be split into a number of files. Each containing 'splitListEvery' number of files",
-          array: false,
-        },
-        stores: {
-          ...storeOption,
-          demandOption: true,
-        },
-        fromBatchFile: {
-          type: 'string',
-          describe:
-            'If you previously saved the output of import --onlyList, then you can specify the file here',
-          array: false,
-        },
-        batchId: {
-          type: 'number',
-          description:
-            'Define only when --fromBatchFile is specified. The file should contain a number of batches. This specifies the ID of batch to use',
-        },
-      });
+      return ccArgs
+        .options({
+          dataset: {
+            ...(await commonCrawlOptions.dataset()),
+            demandOption: false,
+          },
+          skip: {
+            alias: 'n',
+            type: 'number',
+            describe:
+              'The number of dataset files to skip. Useful when resuming a import',
+            default: 0,
+            array: false,
+          },
+          stores: {
+            ...storeOption,
+            demandOption: true,
+          },
+          fromBatchFile: {
+            type: 'string',
+            describe:
+              'If you previously saved the output of import --onlyList, then you can specify the file here',
+            array: false,
+          },
+          batchId: {
+            type: 'number',
+            description:
+              'Define only when --fromBatchFile is specified. The file should contain a number of batches. This specifies the ID of batch to use',
+          },
+        })
+        .check((ccArgs) => {
+          if (ccArgs.dataset && ccArgs.fromBatchFile) {
+            throw new Error(
+              'You cannot specify both --dataset and --fromBatchFile',
+            );
+          }
+          if (!ccArgs.dataset && !ccArgs.fromBatchFile) {
+            throw new Error(
+              'You must specify either --dataset or --fromBatchFile',
+            );
+          }
+          if (!ccArgs.fromBatchFile && typeof ccArgs.batchId !== 'undefined') {
+            throw new Error(
+              'You can only specify batchId when using --fromBatchFile',
+            );
+          }
+          return true;
+        });
     },
     async (ccArgs) => {
       return importCommonCrawl({
         dataset: await ccArgs.dataset,
         stores: (await ccArgs.stores) as Store[],
         skip: ccArgs.skip,
-        splitListEvery: ccArgs.splitListEvery,
-        onlyList: ccArgs.onlyList,
         batchId: ccArgs.batchId,
         fromBatchFile: ccArgs.fromBatchFile,
       });
@@ -389,6 +400,44 @@ const generateDownloadCommand = (args: yargs.Argv<{}>) => {
   );
 };
 
+const generatePrepareCommand = (args: yargs.Argv<{}>) => {
+  return args.command(
+    'import',
+    'Prepares batches for data import',
+    (importArgs) => {
+      return importArgs.command(
+        'commoncrawl',
+        'Prepares batches for Common Crawl import',
+        async (ccArgs) => {
+          return ccArgs.options({
+            dataset: await commonCrawlOptions.dataset(),
+            splitListEvery: {
+              type: 'number',
+              description:
+                "Applicable only when onlyList is specified. The list will be split into a number of files. Each containing 'splitListEvery' number of files",
+              array: false,
+            },
+            output: {
+              alias: 'o',
+              type: 'string',
+              describe: 'The output directory',
+              array: false,
+              demandOption: true,
+            },
+          });
+        },
+        async (ccArgs) => {
+          await prepareCcImport({
+            dataset: await ccArgs.dataset,
+            splitListEvery: ccArgs.splitListEvery,
+            output: ccArgs.output,
+          });
+        },
+      );
+    },
+  );
+};
+
 yargs(process.argv.slice(2))
   .command('scan', 'Scans the internet for specific patterns', (args) => {
     let result = generateIpv4ScanCommand(generateCommonScanOptions(args));
@@ -403,6 +452,9 @@ yargs(process.argv.slice(2))
     'investigate',
     'Runs investigations on specific patterns that have been discovered during the scan',
     generateInvestigation,
+  )
+  .command('prepare', 'Prepares batches for data import', (args) =>
+    generatePrepareCommand(args).strict().demandCommand(),
   )
   .command('download', 'Downloads domain datasets', (args) =>
     generateDownloadCommand(args).strict().demandCommand(),

@@ -4,6 +4,7 @@ import { Writable, Transform } from 'node:stream';
 import Queue from 'promise-queue';
 import { setTimeout } from 'node:timers/promises';
 import tryFetch from './try-fetch';
+import { string } from 'yargs';
 
 type TransformCallback = (error?: Error | null, data?: any) => void;
 
@@ -180,17 +181,22 @@ export async function withCcDataStream(
   );
 }
 
-interface StreamProps {
+type StreamProps = {
   skip?: number;
-  files?: string[];
-}
+} & (
+  | {
+      dataset: string;
+    }
+  | {
+      files: string[];
+    }
+);
 
 export default async function withCcDomainStream(
-  dataset: string,
   { skip, ...props }: StreamProps,
   { onDomain, onProgress, onCalculatedTotal }: CCStreamHandlers,
 ) {
-  let files = props.files ?? (await listFiles(dataset));
+  let files = 'files' in props ? props.files : await listFiles(props.dataset);
   await onCalculatedTotal(files.length);
   const queue = new Queue(2);
   let processed = skip ?? 0;
