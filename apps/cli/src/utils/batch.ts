@@ -8,7 +8,7 @@ export default class Batch<T> {
 
   async add(items: T[]) {
     this.items.push(...items);
-    if (this.items.length < this.batchSize) {
+    if (this.items.length > this.batchSize) {
       await this.process(items);
       this.items = [];
       return;

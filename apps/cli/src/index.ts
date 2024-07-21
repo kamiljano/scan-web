@@ -1,11 +1,10 @@
 #! /usr/bin/env bun
 
 import 'source-map-support/register';
-import yargs, { demandOption } from 'yargs';
+import yargs from 'yargs';
 import { CheckerMap, checkerMap } from './scan/checkers';
 import ipScan from './scan/scan-ips/ip-scan';
 import { stores } from './store';
-import ccScan from './scan/common-crawl/cc-scan';
 import investigateGit from './investigate/git/investigate-git';
 import getCommonCrawlOptions from './scan/common-crawl/cc-crawl-options';
 import importCommonCrawl from './import/import-common-crawl';
@@ -161,49 +160,6 @@ const commonCrawlOptions = {
     };
   },
 } satisfies Record<string, () => Promise<yargs.Options>>;
-
-const generateCommonCrawlScanCommand = (
-  args: ReturnType<typeof generateCommonScanOptions>,
-) => {
-  return args.command(
-    'commoncrawl',
-    'Scans the internet based on the domains specified in the Common Crawl data',
-    async (ccArgs) => {
-      return ccArgs.options({
-        skip: {
-          alias: 'n',
-          type: 'number',
-          describe:
-            'The number of domains to skip. Useful when resuming a scan',
-          default: 0,
-          array: false,
-        },
-        fromBatchFile: {
-          type: 'string',
-          describe:
-            'If you previously saved the output of import --onlyList, then you can specify the file here',
-          array: false,
-        },
-        batchId: {
-          type: 'number',
-          description:
-            'Define only when --fromBatchFile is specified. The file should contain a number of batches. This specifies the ID of batch to use',
-        },
-        dataset: await commonCrawlOptions.dataset(),
-      });
-    },
-    async (ccArgs) => {
-      return ccScan({
-        dataset: await ccArgs.dataset,
-        checks: toCheckerMap(ccArgs.check),
-        stores: ((await ccArgs.store) ?? []) as Store[],
-        skip: ccArgs.skip,
-        fromBatchFile: ccArgs.fromBatchFile,
-        batchId: ccArgs.batchId,
-      });
-    },
-  );
-};
 
 const generateInvestigation = (args: yargs.Argv<{}>) => {
   return args
@@ -441,7 +397,6 @@ const generatePrepareCommand = (args: yargs.Argv<{}>) => {
 yargs(process.argv.slice(2))
   .command('scan', 'Scans the internet for specific patterns', (args) => {
     let result = generateIpv4ScanCommand(generateCommonScanOptions(args));
-    result = generateCommonCrawlScanCommand(result);
     result = generateDataStoreScanCommand(result);
     return result.strict().demandCommand();
   })
