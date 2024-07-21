@@ -1,7 +1,7 @@
 #! /usr/bin/env bun
 
 import 'source-map-support/register';
-import yargs from 'yargs';
+import yargs, { demandOption } from 'yargs';
 import { CheckerMap, checkerMap } from './scan/checkers';
 import ipScan from './scan/scan-ips/ip-scan';
 import { stores } from './store';
@@ -14,6 +14,7 @@ import * as fs from 'node:fs';
 import investigateProjectCli from './investigate/investigate-project/investigate-project-cli';
 import downloadCommonCrawl from './download/download-common-crawl';
 import prepareCcImport from './prepare/import/cc-prepare-import';
+import prepareDatastoreScan from './prepare/scan/prepare-datastore-scan';
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -357,10 +358,41 @@ const generateDownloadCommand = (args: yargs.Argv<{}>) => {
 };
 
 const generatePrepareCommand = (args: yargs.Argv<{}>) => {
-  return args.command(
-    'import',
-    'Prepares batches for data import',
-    (importArgs) => {
+  return args
+    .command('scan', 'Prepares batches for web scanning', (scanArgs) => {
+      return scanArgs.command(
+        'datastore',
+        'Prepares batches for datastore scanning',
+        (dbArgs) => {
+          return dbArgs.options({
+            store: {
+              ...storeOption,
+              demandOption: true,
+              coerce(val: string | string[]): Promise<Store> {
+                if (Array.isArray(val)) {
+                  throw new Error('Only one store can be specified');
+                }
+                return getStore(val);
+              },
+            },
+            splitIntoBatches: {
+              type: 'number',
+              description:
+                'The number of batches that the data store will be split into.',
+              array: false,
+              demandOption: true,
+            },
+          });
+        },
+        async (dbArgs) => {
+          return prepareDatastoreScan({
+            store: await dbArgs.store,
+            splitIntoBatches: dbArgs.splitIntoBatches,
+          });
+        },
+      );
+    })
+    .command('import', 'Prepares batches for data import', (importArgs) => {
       return importArgs.command(
         'commoncrawl',
         'Prepares batches for Common Crawl import',
@@ -390,11 +422,11 @@ const generatePrepareCommand = (args: yargs.Argv<{}>) => {
           });
         },
       );
-    },
-  );
+    });
 };
 
 yargs(process.argv.slice(2))
+  .scriptName('sw')
   .command('scan', 'Scans the internet for specific patterns', (args) => {
     let result = generateIpv4ScanCommand(generateCommonScanOptions(args));
     result = generateDataStoreScanCommand(result);
