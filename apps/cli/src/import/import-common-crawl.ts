@@ -3,7 +3,7 @@ import { Store } from '../store/store';
 import { startEta } from '../eta';
 import _ from 'lodash';
 import fs from 'node:fs';
-import Batch from 'src/utils/batch';
+import Batch from '../utils/batch';
 
 interface ImportCommonCrawlProps {
   dataset: string | undefined;
@@ -12,8 +12,6 @@ interface ImportCommonCrawlProps {
   batchId: number | undefined;
   fromBatchFile: string | undefined;
 }
-
-const readFiles = async (props: ImportCommonCrawlProps) => {};
 
 export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
   let eta: ReturnType<typeof startEta>;
