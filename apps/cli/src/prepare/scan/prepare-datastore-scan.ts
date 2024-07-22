@@ -11,13 +11,13 @@ export default async function prepareDatastoreScan(
   const count = await props.store.countRecords();
   const diff = Math.ceil(count / props.splitIntoBatches);
 
-  const result: { name: string; from: number; to: number }[] = [];
+  const result: { name: string; skip: number; read: number }[] = [];
 
   for (let i = 0; i < props.splitIntoBatches && i * diff < count; i++) {
     result.push({
       name: `batch-${i}`,
-      from: i * diff,
-      to: Math.min((i + 1) * diff - 1, count),
+      skip: i * diff,
+      read: diff,
     });
   }
 

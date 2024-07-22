@@ -1,4 +1,4 @@
-import { Store, ScannedSite } from './store';
+import { Store, ScannedSite, IterateUrlsProps } from './store';
 import { Generated, Kysely } from 'kysely';
 
 const ITERATION_BATCH_SIZE = 1000;
@@ -53,23 +53,40 @@ export default abstract class KyselyStore implements Store {
     return result.total as number;
   }
 
-  async *iterateUrls() {
+  async *iterateUrls(props?: IterateUrlsProps) {
     let lastResult: { id: number; url: string }[] = [];
+    const skip = props?.skip ?? 0;
+    let read = 0;
+
+    const getLimit = () => {
+      if (typeof props?.read === 'undefined') {
+        return ITERATION_BATCH_SIZE;
+      }
+      if (ITERATION_BATCH_SIZE > props.read + read) {
+        return props.read - read;
+      }
+      return ITERATION_BATCH_SIZE;
+    };
+
     do {
-      let query = this.db
+      const result = await this.db
         .selectFrom('sites')
         .select(['id', 'url'])
         .orderBy('id', 'asc')
-        .limit(ITERATION_BATCH_SIZE);
-      if (lastResult.length) {
-        query = query.where('id', '>', lastResult[lastResult.length - 1].id);
-      }
-      const result = await query.execute();
+        .offset(skip + read)
+        .limit(getLimit())
+        .execute();
+
+      read += result.length;
+
       for (const row of result) {
         yield row.url;
       }
       lastResult = result;
-    } while (lastResult.length === ITERATION_BATCH_SIZE);
+    } while (
+      lastResult.length === ITERATION_BATCH_SIZE &&
+      (!props?.read || read < props.read)
+    );
   }
 
   listDomains() {

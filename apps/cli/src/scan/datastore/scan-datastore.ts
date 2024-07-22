@@ -1,28 +1,32 @@
-import { Store } from "../../store/store";
-import { CheckerMap } from "../checkers";
-import Queue from "promise-queue";
-import { setTimeout } from "node:timers/promises";
-import { onSuccess } from "../../scan-utils";
-import { checkUrl } from "../../utils/check-url";
-import { startEta } from "../../eta";
+import { Store } from '../../store/store';
+import { CheckerMap } from '../checkers';
+import Queue from 'promise-queue';
+import { onSuccess } from '../../scan-utils';
+import { checkUrl } from '../../utils/check-url';
+import { startEta } from '../../eta';
 import {
   waitForEmptyQueue,
   waitUntilQueueHasLessThanN,
-} from "../../utils/queue-utils";
+} from '../../utils/queue-utils';
 
 interface ScanDatastoreProps {
   store: Store;
   checks: CheckerMap;
   verbose: boolean;
+  read: number | undefined;
+  skip: number | undefined;
 }
 
 export default async function scanDatastore(props: ScanDatastoreProps) {
-  const totalCount = await props.store.countRecords();
+  const totalCount = props.read ?? (await props.store.countRecords());
   const queue = new Queue(100);
   let processed = 0;
   const eta = startEta(totalCount);
 
-  for await (const url of props.store.iterateUrls()) {
+  for await (const url of props.store.iterateUrls({
+    read: props.read,
+    skip: props.skip,
+  })) {
     if (queue.getQueueLength() > 10000) {
       await waitUntilQueueHasLessThanN(queue, 100);
     }
@@ -45,5 +49,5 @@ export default async function scanDatastore(props: ScanDatastoreProps) {
 
   await waitForEmptyQueue(queue);
 
-  console.log("Done");
+  console.log('Done');
 }

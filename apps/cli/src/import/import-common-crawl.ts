@@ -51,6 +51,7 @@ export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
       },
       onProgress(progress) {
         const etaResult = eta.get(progress.processed);
+        batch.flush();
 
         console.log(
           `Processed ${progress.processed}/${progress.total} (${Math.round(progress.processed / (progress.total / 100))}%): Elapsed: ${etaResult.elapsedHuman}; Remaining: ${etaResult.remainingHuman}`,
@@ -59,5 +60,5 @@ export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
     },
   );
 
-  await batch.finish();
+  await batch.flush();
 }

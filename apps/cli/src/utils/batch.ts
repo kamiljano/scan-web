@@ -15,9 +15,10 @@ export default class Batch<T> {
     }
   }
 
-  async finish() {
+  async flush() {
     if (this.items.length) {
       await this.process(this.items);
+      this.items = [];
     }
   }
 }

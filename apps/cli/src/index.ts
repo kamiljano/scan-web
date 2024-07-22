@@ -1,7 +1,7 @@
 #! /usr/bin/env bun
 
 import 'source-map-support/register';
-import yargs, { demandOption } from 'yargs';
+import yargs, { alias, demandOption } from 'yargs';
 import { CheckerMap, checkerMap } from './scan/checkers';
 import ipScan from './scan/scan-ips/ip-scan';
 import { stores } from './store';
@@ -248,6 +248,15 @@ const generateDataStoreScanCommand = (
             return getStore(val);
           },
         },
+        skip: {
+          description: 'The number of records to skip',
+          type: 'number',
+        },
+        read: {
+          alias: 'r',
+          description: 'The number of records to read',
+          type: 'number',
+        },
         verbose: {
           alias: 'v',
           describe: 'Prints the URLs that are being checked',
@@ -262,6 +271,8 @@ const generateDataStoreScanCommand = (
         store: ((await dbArgs.store) ?? []) as Store,
         checks: toCheckerMap(dbArgs.check),
         verbose: dbArgs.verbose,
+        read: dbArgs.read,
+        skip: dbArgs.skip,
       });
     },
   );
