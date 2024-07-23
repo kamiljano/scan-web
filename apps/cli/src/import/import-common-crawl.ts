@@ -11,6 +11,7 @@ interface ImportCommonCrawlProps {
   skip: number;
   batchId: number | undefined;
   fromBatchFile: string | undefined;
+  verbose: boolean;
 }
 
 export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
@@ -43,6 +44,11 @@ export default async function importCommonCrawl(props: ImportCommonCrawlProps) {
       : { files: files as string[], skip: props.skip },
     {
       async onDomain(domains) {
+        if (props.verbose) {
+          for (const domain of domains) {
+            console.log(`Found domain ${domain}`);
+          }
+        }
         await batch.add(domains);
       },
       onCalculatedTotal(total) {

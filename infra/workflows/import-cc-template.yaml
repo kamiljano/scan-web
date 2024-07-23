@@ -1,17 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: import-cc-template
+  name: import-common-crawl
   namespace: argo
 spec:
   entrypoint: main
+  arguments:
+    parameters:
+      - name: verbose
+        enum:
+          - 'true'
+          - 'false'
+        value: 'false'
   templates:
     - name: main
+      inputs:
+        parameters:
+          - name: verbose
       steps:
         - - name: generate-file-list
             template: generate-file-list-template
-        - - name: scan-web
-            template: scan-web-template
+        - - name: import
+            template: import-template
             arguments:
               artifacts:
                 - name: file-list
@@ -19,11 +29,13 @@ spec:
               parameters:
                 - name: batch-definition
                   value: '{{item}}'
+                - name: verbose
+                  value: '{{inputs.parameters.verbose}}'
             withParam: '{{steps.generate-file-list.outputs.result}}'
 
     - name: generate-file-list-template
       container:
-        image: 10.104.84.38:5000/scanweb:latest
+        image: 10.109.208.164:5000/scanweb:latest
         command: ['/bin/sh', '-c']
         args:
           [
@@ -34,17 +46,18 @@ spec:
           - name: file-list
             path: /app/batches.json
 
-    - name: scan-web-template
+    - name: import-template
       inputs:
         parameters:
           - name: batch-definition
+          - name: verbose
         artifacts:
           - name: file-list
             path: /app/batches.json
       container:
-        image: 10.104.84.38:5000/scanweb:latest
+        image: 10.109.208.164:5000/scanweb:latest
         command: [sh, -c]
         args:
           [
-            "sw import commoncrawl --fromBatchFile /app/batches.json --batchId $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.batchId') -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb",
+            "sw import commoncrawl --fromBatchFile /app/batches.json --batchId $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.batchId') -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb --verbose {{inputs.parameters.verbose}}",
           ]

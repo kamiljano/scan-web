@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: scan-web
+  namespace: argo
+spec:
+  entrypoint: main
+  templates:
+    - name: main
+      steps:
+        - - name: generate-batches
+            template: generate-batches-template
+        - - name: scan-web
+            template: scan-web-template
+            arguments:
+              artifacts:
+              parameters:
+                - name: batch-definition
+                  value: '{{item}}'
+            withParam: '{{steps.generate-batches.outputs.result}}'
+
+    - name: generate-batches-template
+      container:
+        image: 10.109.208.164:5000/scanweb:latest
+        command: ['/bin/sh', '-c']
+        args:
+          [
+            'sw prepare scan datastore --splitIntoBatches 5 -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb',
+          ]
+
+    - name: scan-web-template
+      inputs:
+        parameters:
+          - name: batch-definition
+      container:
+        image: 10.109.208.164:5000/scanweb:latest
+        command: [sh, -c]
+        args:
+          [
+            "sw scan datastore --skip $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.skip') --read $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.read') -c git -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb",
+          ]

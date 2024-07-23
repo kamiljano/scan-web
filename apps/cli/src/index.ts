@@ -312,6 +312,13 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
             description:
               'Define only when --fromBatchFile is specified. The file should contain a number of batches. This specifies the ID of batch to use',
           },
+          verbose: {
+            alias: 'v',
+            describe: 'Prints the URLs that are being imported',
+            default: false,
+            array: false,
+            type: 'boolean',
+          },
         })
         .check((ccArgs) => {
           if (ccArgs.dataset && ccArgs.fromBatchFile) {
@@ -339,6 +346,7 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
         skip: ccArgs.skip,
         batchId: ccArgs.batchId,
         fromBatchFile: ccArgs.fromBatchFile,
+        verbose: ccArgs.verbose,
       });
     },
   );
