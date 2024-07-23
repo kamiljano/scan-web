@@ -1,8 +1,8 @@
-import { ComponentResource } from '@pulumi/pulumi';
+import { ComponentResource, ComponentResourceOptions } from '@pulumi/pulumi';
 import * as fs from 'node:fs';
 import { CustomResource } from '@pulumi/kubernetes/apiextensions';
 import * as yaml from 'js-yaml';
-import { ConfigMap, Namespace } from '@pulumi/kubernetes/core/v1';
+import { Namespace } from '@pulumi/kubernetes/core/v1';
 import { ConfigFile } from '@pulumi/kubernetes/yaml';
 import * as path from 'node:path';
 
@@ -12,8 +12,12 @@ interface ArgoWorkflowsProps {
 }
 
 export default class ArgoWorkflows extends ComponentResource {
-  constructor(name: string, props: ArgoWorkflowsProps) {
-    super('custom:resource:ArgoWorkflows', name);
+  constructor(
+    name: string,
+    props: ArgoWorkflowsProps,
+    opts?: ComponentResourceOptions,
+  ) {
+    super('custom:resource:ArgoWorkflows', name, opts);
 
     new ConfigFile(
       'argo',

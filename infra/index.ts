@@ -26,11 +26,17 @@ if (isMinikube) {
   });
 }
 
-new ScanWeb('scan-web-db', {
+const scanweb = new ScanWeb('scan-web-db', {
   namespace: scanwebNamespace,
 });
 
-new ArgoWorkflows('argo', {
-  namespace: argoNamespace,
-  workflows: [path.join(__dirname, 'workflows', 'import-cc-template.yaml')],
-});
+new ArgoWorkflows(
+  'argo',
+  {
+    namespace: argoNamespace,
+    workflows: [path.join(__dirname, 'workflows', 'import-cc-template.yaml')],
+  },
+  {
+    dependsOn: [scanweb],
+  },
+);
