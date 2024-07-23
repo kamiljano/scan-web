@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "deploy": "npm run -w infra deploy && npm --prefix apps/cli run docker:deploy"
+    "deploy": "npm run -w infra deploy && npm --prefix apps/cli run docker:deploy",
+    "forward:argo": "kubectl -n argo port-forward deployment/argo-server 2746:2746",
+    "forward:pg": "kubectl -n scanweb port-forward service/scanweb-postgres 5433:5433"
   },
   "workspaces": [
     "infra/",
