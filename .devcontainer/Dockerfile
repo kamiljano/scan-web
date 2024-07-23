@@ -13,6 +13,7 @@ RUN sudo install minikube-linux-arm64 /usr/local/bin/minikube && rm minikube-lin
 
 # Install pulumi
 RUN curl -fsSL https://get.pulumi.com | sh
+ENV PATH=$PATH:/home/vscode/.pulumi/bin
 
 # Install kubectl
 RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
