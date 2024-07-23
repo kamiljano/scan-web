@@ -96,7 +96,6 @@ export default class DockerRegistry extends ComponentResource {
           selector: { app: 'docker-registry' },
           ports: [{ port: 5000, targetPort: 5000 }],
           type: 'ClusterIP', // Use appropriate service type based on your setup
-          loadBalancerIP: '10.104.84.38',
         },
       },
       {
