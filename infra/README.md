@@ -60,15 +60,6 @@ Or to update it
 
 7. Jumpbox
 
-If you need to debug anything regarding the network, it's convenient to be able to get into one of the VMs running in that network.
-For this reason a jumpbox pod is created when you run the application on minikube. You can access it with the following command:
-
 ```shell
-kubectl -n argo exec --stdin --tty jumpbox -- /bin/bash
-```
-
-Then you can connect to the db for instance with
-
-```shell
-psql -d scanweb -p 5433 -U scanweb -h scanweb-postgres.scanweb.svc.cluster.local
+kubectl run -i -t --rm busybox --image=busybox --restart=Never
 ```
