@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "vitest run tests",
-    "build": "tsc"
+    "build": "tsc",
+    "docker:deploy": "sh ./deploy-container.sh"
   },
   "bin": {
     "sw": "./src/index.ts"

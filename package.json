@@ -2,7 +2,9 @@
   "name": "scan-web",
   "version": "1.0.0",
   "private": true,
-  "keywords": [],
+  "scripts": {
+    "deploy": "npm run -w infra deploy && npm --prefix apps/cli run docker:deploy"
+  },
   "workspaces": [
     "infra/",
     "apps/"

@@ -1,6 +1,9 @@
 {
     "name": "@scan-web/infra",
     "main": "index.ts",
+    "scripts": {
+        "deploy": "pulumi up --yes"
+    },
     "devDependencies": {
         "@types/js-yaml": "^4.0.9",
         "@types/node": "^18",
