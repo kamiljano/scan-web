@@ -7,3 +7,4 @@ docker-compose up -d db
 minikube config set driver docker
 minikube delete
 minikube start
+minikube addons enable registry

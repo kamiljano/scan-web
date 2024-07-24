@@ -1,7 +1,6 @@
 import { ComponentResource } from '@pulumi/pulumi';
 import { Namespace } from '@pulumi/kubernetes/core/v1';
 import Postgres from './postgres';
-import DockerRegistry from './docker-registry';
 
 interface ScanWebProps {
   namespace: Namespace;
@@ -13,16 +12,6 @@ export default class ScanWeb extends ComponentResource {
 
     new Postgres(
       'postgres',
-      {
-        namespace: props.namespace,
-      },
-      {
-        parent: this,
-      },
-    );
-
-    new DockerRegistry(
-      'docker-registry',
       {
         namespace: props.namespace,
       },
