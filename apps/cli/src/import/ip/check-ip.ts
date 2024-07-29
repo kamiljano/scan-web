@@ -1,4 +1,4 @@
-import tryFetch, { TryFetchResponse } from 'src/utils/try-fetch';
+import tryFetch, { TryFetchResponse } from '../../utils/try-fetch';
 import * as dns from 'node:dns/promises';
 
 export const checkIp = async (ip: string): Promise<string[]> => {

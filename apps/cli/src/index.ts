@@ -15,6 +15,7 @@ import downloadCommonCrawl from './download/download-common-crawl';
 import prepareCcImport from './prepare/import/cc-prepare-import';
 import prepareDatastoreScan from './prepare/scan/prepare-datastore-scan';
 import importIps from './import/ip/import-ips';
+import prepareIpImport from './prepare/import/ipv4-prepare-import';
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -419,35 +420,55 @@ const generatePrepareCommand = (args: yargs.Argv<{}>) => {
       );
     })
     .command('import', 'Prepares batches for data import', (importArgs) => {
-      return importArgs.command(
-        'commoncrawl',
-        'Prepares batches for Common Crawl import',
-        async (ccArgs) => {
-          return ccArgs.options({
-            dataset: await commonCrawlOptions.dataset(),
-            splitListEvery: {
-              type: 'number',
-              description:
-                "Applicable only when onlyList is specified. The list will be split into a number of files. Each containing 'splitListEvery' number of files",
-              array: false,
-            },
-            output: {
-              alias: 'o',
-              type: 'string',
-              describe: 'The output directory',
-              array: false,
-              demandOption: true,
-            },
-          });
-        },
-        async (ccArgs) => {
-          await prepareCcImport({
-            dataset: await ccArgs.dataset,
-            splitListEvery: ccArgs.splitListEvery,
-            output: ccArgs.output,
-          });
-        },
-      );
+      return importArgs
+        .command(
+          'ipv4',
+          'Prepares batches for IPv4 import',
+          (ipArgs) => {
+            return ipArgs.options({
+              splitIntoBatches: {
+                type: 'number',
+                description:
+                  'The number of batches that the data store will be split into.',
+                array: false,
+                demandOption: true,
+              },
+            });
+          },
+          (ipArgs) =>
+            prepareIpImport({
+              splitIntoBatches: ipArgs.splitIntoBatches,
+            }),
+        )
+        .command(
+          'commoncrawl',
+          'Prepares batches for Common Crawl import',
+          async (ccArgs) => {
+            return ccArgs.options({
+              dataset: await commonCrawlOptions.dataset(),
+              splitListEvery: {
+                type: 'number',
+                description:
+                  "Applicable only when onlyList is specified. The list will be split into a number of files. Each containing 'splitListEvery' number of files",
+                array: false,
+              },
+              output: {
+                alias: 'o',
+                type: 'string',
+                describe: 'The output directory',
+                array: false,
+                demandOption: true,
+              },
+            });
+          },
+          async (ccArgs) => {
+            await prepareCcImport({
+              dataset: await ccArgs.dataset,
+              splitListEvery: ccArgs.splitListEvery,
+              output: ccArgs.output,
+            });
+          },
+        );
     });
 };
 
