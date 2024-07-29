@@ -8,7 +8,7 @@ interface PrepareDatastoreScanProps {
 export default async function prepareDatastoreScan(
   props: PrepareDatastoreScanProps,
 ) {
-  const count = await props.store.countRecords();
+  const count = await props.store.countSites();
   const diff = Math.ceil(count / props.splitIntoBatches);
 
   const result: { name: string; skip: number; read: number }[] = [];

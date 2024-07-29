@@ -5,13 +5,15 @@ import { git } from '../../../src/scan/checkers/git/git';
 
 describe('scan-datastore', () => {
   test('Scans the domains from the datastore', async () => {
-    const store = new SqliteStore(':memory:');
+    const store = SqliteStore.inMemory();
     await store.init();
     await store.insertUrls(['http://myfastquote.com']);
 
     await scanDatastore({
       store,
       verbose: false,
+      skip: undefined,
+      read: undefined,
       checks: {
         '.git/HEAD': [git],
       },

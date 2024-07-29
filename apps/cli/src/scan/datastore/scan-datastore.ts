@@ -18,7 +18,7 @@ interface ScanDatastoreProps {
 }
 
 export default async function scanDatastore(props: ScanDatastoreProps) {
-  const totalCount = props.read ?? (await props.store.countRecords());
+  const totalCount = props.read ?? (await props.store.countSites());
   const queue = new Queue(100);
   let processed = 0;
   const eta = startEta(totalCount);

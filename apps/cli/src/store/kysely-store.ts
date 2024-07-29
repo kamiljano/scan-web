@@ -1,5 +1,5 @@
 import { Store, ScannedSite, IterateUrlsProps } from './store';
-import { Generated, Kysely } from 'kysely';
+import { Generated, Kysely, Selectable } from 'kysely';
 
 const ITERATION_BATCH_SIZE = 1000;
 
@@ -44,7 +44,7 @@ export default abstract class KyselyStore implements Store {
       .execute();
   }
 
-  async countRecords() {
+  async countSites() {
     const result = await this.db
       .selectFrom('sites')
       .select((cb) => [cb.fn.countAll().as('total')])
@@ -111,5 +111,19 @@ export default abstract class KyselyStore implements Store {
 
   async clear() {
     await this.db.deleteFrom('sites').execute();
+  }
+
+  async getSites(fromId?: number): Promise<Selectable<SiteRecord>[]> {
+    let query = this.db.selectFrom('sites').selectAll();
+
+    if (fromId) {
+      query = query.where('id', '>', fromId);
+    }
+
+    return query.execute();
+  }
+
+  async deleteSites(ids: number[]): Promise<void> {
+    await this.db.deleteFrom('sites').where('id', 'in', ids).execute();
   }
 }

@@ -16,6 +16,7 @@ import prepareCcImport from './prepare/import/cc-prepare-import';
 import prepareDatastoreScan from './prepare/scan/prepare-datastore-scan';
 import importIps from './import/ip/import-ips';
 import prepareIpImport from './prepare/import/ipv4-prepare-import';
+import cleanDb from './clean-db';
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -472,6 +473,33 @@ const generatePrepareCommand = (args: yargs.Argv<{}>) => {
     });
 };
 
+const generateDbCommand = (args: yargs.Argv<{}>) => {
+  return args.command(
+    'clean',
+    'Iterates through all the sites in the datastore and removes the ones that are not reachable',
+    (cleanArgs) => {
+      return cleanArgs.options({
+        store: {
+          ...storeOption,
+          description:
+            'A single data store that the cleanup will be executed against',
+          coerce(val: string | string[]): Promise<Store> {
+            if (Array.isArray(val)) {
+              throw new Error('Only one store can be specified');
+            }
+            return getStore(val);
+          },
+        },
+      });
+    },
+    async (cleanArgs) => {
+      await cleanDb({
+        store: (await cleanArgs.store) as Store,
+      });
+    },
+  );
+};
+
 yargs(process.argv.slice(2))
   .scriptName('sw')
   .command('scan', 'Scans the internet for specific patterns', (args) => {
@@ -487,6 +515,7 @@ yargs(process.argv.slice(2))
     'Runs investigations on specific patterns that have been discovered during the scan',
     generateInvestigation,
   )
+  .command('db', 'Contains general db maintenance tasks', generateDbCommand)
   .command('prepare', 'Prepares batches for data import', (args) =>
     generatePrepareCommand(args).strict().demandCommand(),
   )
