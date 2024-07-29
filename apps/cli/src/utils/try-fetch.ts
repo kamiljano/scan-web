@@ -6,7 +6,7 @@ export default async function tryFetch(url: string, options?: TryFetchOptions) {
   const controller = new AbortController();
   setTimeout(() => controller.abort(), options?.timeout ?? 4000);
 
-  const response = await fetch(url.replace(/\/HEAD$/, ""), {
+  const response = await fetch(url.replace(/\/HEAD$/, ''), {
     signal: controller.signal,
   });
 
@@ -24,5 +24,16 @@ export default async function tryFetch(url: string, options?: TryFetchOptions) {
     get body() {
       return response.body;
     },
+    get ok() {
+      return response.ok;
+    },
+    get status() {
+      return response.status;
+    },
+    get url() {
+      return response.url;
+    },
   };
 }
+
+export type TryFetchResponse = Awaited<ReturnType<typeof tryFetch>>;

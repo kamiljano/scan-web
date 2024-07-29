@@ -1,9 +1,8 @@
 #! /usr/bin/env bun
 
 import 'source-map-support/register';
-import yargs, { alias, demandOption } from 'yargs';
+import yargs from 'yargs';
 import { CheckerMap, checkerMap } from './scan/checkers';
-import ipScan from './scan/scan-ips/ip-scan';
 import { stores } from './store';
 import investigateGit from './investigate/git/investigate-git';
 import getCommonCrawlOptions from './scan/common-crawl/cc-crawl-options';
@@ -15,6 +14,7 @@ import investigateProjectCli from './investigate/investigate-project/investigate
 import downloadCommonCrawl from './download/download-common-crawl';
 import prepareCcImport from './prepare/import/cc-prepare-import';
 import prepareDatastoreScan from './prepare/scan/prepare-datastore-scan';
+import importIps from './import/ip/import-ips';
 
 const toCheckerMap = (value: string | string[]) => {
   const set = new Set(Array.isArray(value) ? value : [value]);
@@ -88,49 +88,6 @@ const generateCommonScanOptions = (args: yargs.Argv<{}>) => {
     },
     store: storeOption,
   });
-};
-
-const generateIpv4ScanCommand = (
-  args: ReturnType<typeof generateCommonScanOptions>,
-) => {
-  return args.command(
-    'ipv4',
-    'Scans all IPv4 addresses (unless otherwise specified in search of requested patterns',
-    (ipScanArgs) => {
-      return ipScanArgs.options({
-        from: {
-          alias: 'f',
-          type: 'string',
-          describe: 'The starting IP address',
-          default: '0.0.0.0',
-          coerce: isIPv4,
-          configuration: {
-            'duplicate-arguments-array': false,
-          },
-          array: false,
-        },
-        to: {
-          alias: 't',
-          type: 'string',
-          describe: 'The last IP address to check',
-          default: '255.255.255.255',
-          configuration: {
-            'duplicate-arguments-array': false,
-          },
-          coerce: isIPv4,
-          array: false,
-        },
-      });
-    },
-    async (ipScanArgs) => {
-      return ipScan({
-        from: ipScanArgs.from,
-        to: ipScanArgs.to,
-        checks: toCheckerMap(ipScanArgs.check),
-        stores: ((await ipScanArgs.store) ?? []) as Store[],
-      });
-    },
-  );
 };
 
 let ccOptions: Promise<string[]> | undefined;
@@ -279,38 +236,34 @@ const generateDataStoreScanCommand = (
 };
 
 const generateImportDomains = (args: yargs.Argv<{}>) => {
-  return args.command(
-    'commoncrawl',
-    'Imports domains from the Common Crawl dataset and stores them in the datastore. Once provided as input, you can use the db scan command for faster performance than scanning the commoncrawl for instance',
-    async (ccArgs) => {
-      return ccArgs
-        .options({
-          dataset: {
-            ...(await commonCrawlOptions.dataset()),
-            demandOption: false,
-          },
-          skip: {
-            alias: 'n',
-            type: 'number',
-            describe:
-              'The number of dataset files to skip. Useful when resuming a import',
-            default: 0,
-            array: false,
-          },
-          stores: {
-            ...storeOption,
-            demandOption: true,
-          },
-          fromBatchFile: {
+  return args
+    .command(
+      'ipv4',
+      'Iterates through all IPv4 addresses and imports all of those that return response 200 when calling over http or https',
+      (ipArgs) => {
+        return ipArgs.options({
+          stores: storeOption,
+          from: {
+            alias: 'f',
             type: 'string',
-            describe:
-              'If you previously saved the output of import --onlyList, then you can specify the file here',
+            describe: 'The starting IP address',
+            default: '0.0.0.0',
+            coerce: isIPv4,
+            configuration: {
+              'duplicate-arguments-array': false,
+            },
             array: false,
           },
-          batchId: {
-            type: 'number',
-            description:
-              'Define only when --fromBatchFile is specified. The file should contain a number of batches. This specifies the ID of batch to use',
+          to: {
+            alias: 't',
+            type: 'string',
+            describe: 'The last IP address to check',
+            default: '255.255.255.255',
+            configuration: {
+              'duplicate-arguments-array': false,
+            },
+            coerce: isIPv4,
+            array: false,
           },
           verbose: {
             alias: 'v',
@@ -319,37 +272,91 @@ const generateImportDomains = (args: yargs.Argv<{}>) => {
             array: false,
             type: 'boolean',
           },
-        })
-        .check((ccArgs) => {
-          if (ccArgs.dataset && ccArgs.fromBatchFile) {
-            throw new Error(
-              'You cannot specify both --dataset and --fromBatchFile',
-            );
-          }
-          if (!ccArgs.dataset && !ccArgs.fromBatchFile) {
-            throw new Error(
-              'You must specify either --dataset or --fromBatchFile',
-            );
-          }
-          if (!ccArgs.fromBatchFile && typeof ccArgs.batchId !== 'undefined') {
-            throw new Error(
-              'You can only specify batchId when using --fromBatchFile',
-            );
-          }
-          return true;
         });
-    },
-    async (ccArgs) => {
-      return importCommonCrawl({
-        dataset: await ccArgs.dataset,
-        stores: (await ccArgs.stores) as Store[],
-        skip: ccArgs.skip,
-        batchId: ccArgs.batchId,
-        fromBatchFile: ccArgs.fromBatchFile,
-        verbose: ccArgs.verbose,
-      });
-    },
-  );
+      },
+      async (ipArgs) => {
+        await importIps({
+          from: ipArgs.from,
+          to: ipArgs.to,
+          stores: (await ipArgs.stores) as Store[],
+          verbose: ipArgs.verbose,
+        });
+      },
+    )
+    .command(
+      'commoncrawl',
+      'Imports domains from the Common Crawl dataset and stores them in the datastore. Once provided as input, you can use the db scan command for faster performance than scanning the commoncrawl for instance',
+      async (ccArgs) => {
+        return ccArgs
+          .options({
+            dataset: {
+              ...(await commonCrawlOptions.dataset()),
+              demandOption: false,
+            },
+            skip: {
+              alias: 'n',
+              type: 'number',
+              describe:
+                'The number of dataset files to skip. Useful when resuming a import',
+              default: 0,
+              array: false,
+            },
+            stores: {
+              ...storeOption,
+              demandOption: true,
+            },
+            fromBatchFile: {
+              type: 'string',
+              describe:
+                'If you previously saved the output of import --onlyList, then you can specify the file here',
+              array: false,
+            },
+            batchId: {
+              type: 'number',
+              description:
+                'Define only when --fromBatchFile is specified. The file should contain a number of batches. This specifies the ID of batch to use',
+            },
+            verbose: {
+              alias: 'v',
+              describe: 'Prints the URLs that are being imported',
+              default: false,
+              array: false,
+              type: 'boolean',
+            },
+          })
+          .check((ccArgs) => {
+            if (ccArgs.dataset && ccArgs.fromBatchFile) {
+              throw new Error(
+                'You cannot specify both --dataset and --fromBatchFile',
+              );
+            }
+            if (!ccArgs.dataset && !ccArgs.fromBatchFile) {
+              throw new Error(
+                'You must specify either --dataset or --fromBatchFile',
+              );
+            }
+            if (
+              !ccArgs.fromBatchFile &&
+              typeof ccArgs.batchId !== 'undefined'
+            ) {
+              throw new Error(
+                'You can only specify batchId when using --fromBatchFile',
+              );
+            }
+            return true;
+          });
+      },
+      async (ccArgs) => {
+        return importCommonCrawl({
+          dataset: await ccArgs.dataset,
+          stores: (await ccArgs.stores) as Store[],
+          skip: ccArgs.skip,
+          batchId: ccArgs.batchId,
+          fromBatchFile: ccArgs.fromBatchFile,
+          verbose: ccArgs.verbose,
+        });
+      },
+    );
 };
 
 const generateDownloadCommand = (args: yargs.Argv<{}>) => {
@@ -447,7 +454,7 @@ const generatePrepareCommand = (args: yargs.Argv<{}>) => {
 yargs(process.argv.slice(2))
   .scriptName('sw')
   .command('scan', 'Scans the internet for specific patterns', (args) => {
-    let result = generateIpv4ScanCommand(generateCommonScanOptions(args));
+    let result = generateCommonScanOptions(args);
     result = generateDataStoreScanCommand(result);
     return result.strict().demandCommand();
   })
