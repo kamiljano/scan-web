@@ -26,6 +26,7 @@ new ArgoWorkflows(
     workflows: [
       path.join(__dirname, 'workflows', 'import-cc-template.yaml'),
       path.join(__dirname, 'workflows', 'scan-template.yaml'),
+      path.join(__dirname, 'workflows', 'import-ips-template.yaml'),
     ],
   },
   {

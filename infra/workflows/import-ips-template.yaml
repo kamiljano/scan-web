@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: import-ipv4s
+  namespace: argo
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: verbose
+        enum:
+          - 'true'
+          - 'false'
+        value: 'false'
+  templates:
+    - name: main
+      inputs:
+        parameters:
+          - name: verbose
+      steps:
+        - - name: generate-ip-list
+            template: generate-ip-list-template
+        - - name: import
+            template: import-template
+            arguments:
+              parameters:
+                - name: batch-definition
+                  value: '{{item}}'
+                - name: verbose
+                  value: '{{inputs.parameters.verbose}}'
+            withParam: '{{steps.generate-ip-list.outputs.result}}'
+
+    - name: generate-ip-list-template
+      container:
+        image: localhost:5000/scanweb:latest
+        command: ['/bin/sh', '-c']
+        args: ['sw prepare import ipv4 --split-into-batches 5']
+
+    - name: import-template
+      inputs:
+        parameters:
+          - name: batch-definition
+          - name: verbose
+      container:
+        image: localhost:5000/scanweb:latest
+        command: [sh, -c]
+        args:
+          [
+            "sw import ipv4 --from $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.from') --to $(echo '{{inputs.parameters.batch-definition}}' | jq -r '.to') -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb --verbose {{inputs.parameters.verbose}}",
+          ]

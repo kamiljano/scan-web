@@ -21,7 +21,13 @@ export const checkIp = async (ip: string): Promise<string[]> => {
     return [];
   }
 
-  const domains = await dns.reverse(ip);
+  let domains: string[] = [];
+  try {
+    domains = await dns.reverse(ip);
+  } catch (err) {
+    //noop
+  }
+
   const hasHttps = succesfulResponse.some((response) =>
     response.url.startsWith('https'),
   );
