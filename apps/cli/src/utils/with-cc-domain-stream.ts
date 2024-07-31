@@ -4,7 +4,6 @@ import { Writable, Transform } from 'node:stream';
 import Queue from 'promise-queue';
 import { setTimeout } from 'node:timers/promises';
 import tryFetch from './try-fetch';
-import { string } from 'yargs';
 
 type TransformCallback = (error?: Error | null, data?: any) => void;
 

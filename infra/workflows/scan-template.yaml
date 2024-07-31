@@ -21,7 +21,7 @@ spec:
 
     - name: generate-batches-template
       container:
-        image: localhost:5000/scanweb:latest
+        image: registry.digitalocean.com/scanweb/scanweb:latest
         command: ['/bin/sh', '-c']
         args:
           [
@@ -33,7 +33,7 @@ spec:
         parameters:
           - name: batch-definition
       container:
-        image: localhost:5000/scanweb:latest
+        image: registry.digitalocean.com/scanweb/scanweb:latest
         command: [sh, -c]
         args:
           [

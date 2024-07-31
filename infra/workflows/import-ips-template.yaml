@@ -32,7 +32,7 @@ spec:
 
     - name: generate-ip-list-template
       container:
-        image: localhost:5000/scanweb:latest
+        image: registry.digitalocean.com/scanweb/scanweb:latest
         command: ['/bin/sh', '-c']
         args: ['sw prepare import ipv4 --split-into-batches 5']
 
@@ -42,7 +42,7 @@ spec:
           - name: batch-definition
           - name: verbose
       container:
-        image: localhost:5000/scanweb:latest
+        image: registry.digitalocean.com/scanweb/scanweb:latest
         command: [sh, -c]
         args:
           [

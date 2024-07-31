@@ -35,7 +35,7 @@ spec:
 
     - name: generate-file-list-template
       container:
-        image: localhost:5000/scanweb:latest
+        image: registry.digitalocean.com/scanweb/scanweb:latest
         command: ['/bin/sh', '-c']
         args:
           [
@@ -55,7 +55,7 @@ spec:
           - name: file-list
             path: /app/batches.json
       container:
-        image: localhost:5000/scanweb:latest
+        image: registry.digitalocean.com/scanweb/scanweb:latest
         command: [sh, -c]
         args:
           [
