@@ -1,12 +1,12 @@
-import { CheckerValidation, textDecoder } from "../checker";
-import tryFetch from "../../../utils/try-fetch";
-import ini from "ini";
-import isCloneable from "./is-cloneable";
+import { CheckerValidation, textDecoder } from '../checker';
+import tryFetch from '../../../utils/try-fetch';
+import ini from 'ini';
+import isCloneable from './is-cloneable';
 
 const getDotGitUrl = (url: string): string => {
   const dotGitUrlMatch = url.match(/^.*\/\.git/);
   if (!dotGitUrlMatch) {
-    throw new Error("URL does not contain .git");
+    throw new Error('URL does not contain .git');
   }
   return dotGitUrlMatch[0];
 };
@@ -32,9 +32,9 @@ const isDirectoryExposed = async (url: string): Promise<boolean> => {
     const response = await tryFetch(getDotGitUrl(url), { timeout: 10000 });
     const body = await response.text();
     return (
-      body.includes("<html") &&
-      body.includes(">HEAD<") &&
-      body.includes(">index<")
+      body.includes('<html') &&
+      body.includes('>HEAD<') &&
+      body.includes('>index<')
     );
   } catch (err) {
     return false;
@@ -44,7 +44,7 @@ const isDirectoryExposed = async (url: string): Promise<boolean> => {
 export const git: CheckerValidation = async (ctx) => {
   if (ctx.body && ctx.body.length) {
     const body = textDecoder.decode(ctx.body);
-    if (body.startsWith("ref:")) {
+    if (body.startsWith('ref:')) {
       const [directoryExposed, gitRepo] = await Promise.all([
         isDirectoryExposed(ctx.url),
         getGitRepo(ctx.url),
@@ -56,7 +56,7 @@ export const git: CheckerValidation = async (ctx) => {
 
       if (gitRepo) {
         meta.gitRepo = gitRepo;
-        meta.cloneable = await isCloneable(gitRepo);
+        //meta.cloneable = await isCloneable(gitRepo);
       }
 
       return {

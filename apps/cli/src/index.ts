@@ -1,4 +1,4 @@
-#! /usr/bin/env bun
+#! /usr/bin/env node
 
 import 'source-map-support/register';
 import yargs from 'yargs';
