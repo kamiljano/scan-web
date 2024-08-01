@@ -1,5 +1,0 @@
-config:
-  digitalocean:token:
-    secure: AAABAP2t8x/kcLqRciXVZV5EmE3LqMX8lqnieWcSqmAxOlti610xoH+AWv00XUw3osEJn77iItKaDVNeb/cOSRykx1txm5LUc/lXe1HHPErqUB+Eu49C5csplF3PrWRekWxydtmTbw==
-  infra:isMinikube: 'true'
-  kubernetes:context: do-nyc1-k8s-1-30-1-do-0-nyc1-1720510325250

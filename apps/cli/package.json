@@ -5,7 +5,8 @@
   "scripts": {
     "test": "vitest run tests",
     "build": "tsc",
-    "docker:deploy": "sh ./deploy-container.sh"
+    "minikube:docker:deploy": "sh ./deploy-minikube-container.sh",
+    "do:docker:deploy": "sh ./deploy-do-container.sh"
   },
   "bin": {
     "sw": "./dist/src/index.js"

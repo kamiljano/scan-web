@@ -10,4 +10,4 @@ echo "Docker image built. Pushing to registry..."
 
 docker push localhost:5000/scanweb
 
-echo "Successfully deployed container to Kubernetes cluster."
+echo "Successfully deployed container to Minikube."
