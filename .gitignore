@@ -6,3 +6,6 @@ dist
 /.vscode/
 /temp/
 /datasets/
+*.dump
+*.heapsnapshot
+*.heapprofile
