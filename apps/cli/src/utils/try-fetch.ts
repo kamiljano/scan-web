@@ -21,6 +21,9 @@ export default async function tryFetch(url: string, options?: TryFetchOptions) {
     json() {
       return response.json();
     },
+    arrayBuffer() {
+      return response.arrayBuffer();
+    },
     get body() {
       return response.body;
     },

@@ -25,7 +25,7 @@ spec:
         command: ['/bin/sh', '-c']
         args:
           [
-            'sw prepare scan datastore --splitIntoBatches 5 -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb',
+            'sw prepare scan datastore --splitIntoBatches 4 -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb',
           ]
 
     - name: scan-web-template

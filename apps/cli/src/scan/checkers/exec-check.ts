@@ -1,9 +1,9 @@
+import tryFetch from '../../utils/try-fetch';
 import {
   CheckerResult,
   CheckerSuccessResult,
   CheckerValidation,
-} from "./checker";
-import { setTimeout } from "node:timers/promises";
+} from './checker';
 
 export interface CheckResult<TResult extends CheckerResult = CheckerResult> {
   result: TResult;
@@ -11,12 +11,10 @@ export interface CheckResult<TResult extends CheckerResult = CheckerResult> {
 }
 
 export const execCheck = async (url: string, checkers: CheckerValidation[]) => {
-  const controller = new AbortController();
-  setTimeout(4000).then(() => controller.abort());
-  const response = await fetch(url, { signal: controller.signal });
+  const response = await tryFetch(url);
 
   if (!response.ok) {
-    throw new Error("Failed to fetch the page");
+    throw new Error('Failed to fetch the page');
   }
 
   let body: Uint8Array | undefined = undefined;
@@ -41,7 +39,7 @@ export const execCheck = async (url: string, checkers: CheckerValidation[]) => {
   );
 
   return result
-    .filter((r) => r.status === "fulfilled" && r.value.result.success)
+    .filter((r) => r.status === 'fulfilled' && r.value.result.success)
     .map(
       (r) =>
         (r as PromiseFulfilledResult<CheckResult<CheckerSuccessResult>>).value,

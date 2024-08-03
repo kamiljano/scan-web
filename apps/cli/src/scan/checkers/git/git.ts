@@ -16,9 +16,7 @@ const getGitRepo = async (url: string): Promise<string | undefined> => {
   let body: string | undefined = undefined;
   try {
     configUrl = `${getDotGitUrl(url)}/config`;
-    const response = await tryFetch(configUrl, {
-      timeout: 10000,
-    });
+    const response = await tryFetch(configUrl);
     body = await response.text();
     return ini.parse(body)['remote "origin"'].url;
   } catch (err) {
@@ -29,7 +27,7 @@ const getGitRepo = async (url: string): Promise<string | undefined> => {
 
 const isDirectoryExposed = async (url: string): Promise<boolean> => {
   try {
-    const response = await tryFetch(getDotGitUrl(url), { timeout: 10000 });
+    const response = await tryFetch(getDotGitUrl(url));
     const body = await response.text();
     return (
       body.includes('<html') &&
