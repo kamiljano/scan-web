@@ -1,13 +1,10 @@
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
-import investigateFile from "./investigate-file";
-import {
-  FileInvestigationReport,
-  InvestigationReport,
-} from "./investigation-report";
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import { SecretFinding, InvestigationReport } from './investigation-report';
+import { detect } from './gitleaks';
 
 async function* iterateFiles(dir: string): AsyncIterable<string> {
-  if (dir.endsWith("/.git") || dir.endsWith("/node_modules")) {
+  if (dir.endsWith('/.git') || dir.endsWith('/node_modules')) {
     return;
   }
   const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -23,22 +20,22 @@ async function* iterateFiles(dir: string): AsyncIterable<string> {
 }
 
 const extensionMappings: Record<string, string> = {
-  ".ts": "typescript",
-  ".js": "javascript",
-  ".php": "php",
-  ".py": "python",
-  ".rb": "ruby",
-  ".go": "go",
-  ".rs": "rust",
-  ".java": "java",
-  ".kt": "kotlin",
-  ".swift": "swift",
-  ".c": "c",
-  ".cpp": "cpp",
-  ".h": "c",
-  ".cs": "csharp",
-  ".sh": "shell",
-  ".bash": "bash",
+  '.ts': 'typescript',
+  '.js': 'javascript',
+  '.php': 'php',
+  '.py': 'python',
+  '.rb': 'ruby',
+  '.go': 'go',
+  '.rs': 'rust',
+  '.java': 'java',
+  '.kt': 'kotlin',
+  '.swift': 'swift',
+  '.c': 'c',
+  '.cpp': 'cpp',
+  '.h': 'c',
+  '.cs': 'csharp',
+  '.sh': 'shell',
+  '.bash': 'bash',
 };
 
 const findLanguages = (files: string[]): string[] => {
@@ -66,28 +63,16 @@ const findLanguages = (files: string[]): string[] => {
 export default async function investigateProject(
   projectDir: string,
 ): Promise<InvestigationReport> {
-  const files: string[] = [];
   const fullPathFiles: string[] = [];
 
   for await (const file of iterateFiles(projectDir)) {
-    files.push(file.replace(projectDir, ""));
     fullPathFiles.push(file);
   }
 
-  const findings: Record<string, FileInvestigationReport[]> = {};
-  await Promise.all(
-    fullPathFiles.map(async (file) => {
-      const data = await investigateFile(file);
-
-      if (data.length > 0) {
-        findings[file.replace(projectDir, "")] = data;
-      }
-    }),
-  );
+  const findings = detect(projectDir);
 
   return {
-    languages: findLanguages(files),
-    files,
+    languages: findLanguages(fullPathFiles),
     findings,
   };
 }

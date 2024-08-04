@@ -4,8 +4,9 @@ USER vscode
 WORKDIR /home/vscode
 
 RUN sudo apt update -y
-
+RUN sudo apt-get update
 RUN sudo apt install -y postgresql-common postgresql libpq-dev apt-transport-https ca-certificates curl gnupg
+RUN sudo apt-get install -y gitleaks
 
 # Install minikube
 RUN curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-arm64

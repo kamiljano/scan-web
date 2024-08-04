@@ -15,7 +15,7 @@ FROM node:20-slim AS prod
 WORKDIR /app
 
 RUN apt-get update -y
-RUN apt-get install -y jq
+RUN apt-get install -y jq git gitleaks
 
 COPY --from=build /build/package.json .
 COPY --from=build /build/package-lock.json .
