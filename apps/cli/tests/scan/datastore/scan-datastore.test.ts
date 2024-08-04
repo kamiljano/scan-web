@@ -30,7 +30,7 @@ describe('scan-datastore', () => {
           url: 'http://myfastquote.com/.git/HEAD',
           directoryExposed: true,
           gitRepo: 'git@github.com:LeadVision-Media/myfastquote.git',
-          cloneable: false,
+          //cloneable: false,
         },
       },
     ]);

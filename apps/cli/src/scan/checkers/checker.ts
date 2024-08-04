@@ -2,7 +2,7 @@ interface CheckerContext {
   /**
    * HTTP(s) Request body
    */
-  body?: Uint8Array;
+  body?: string;
 
   /**
    * URL of the page

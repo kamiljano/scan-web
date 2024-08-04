@@ -4,12 +4,23 @@ metadata:
   name: scan-web
   namespace: argo
 spec:
+  arguments:
+    parameters:
+      - name: numOfBatches
+        value: '5'
   entrypoint: main
   templates:
     - name: main
+      inputs:
+        parameters:
+          - name: numOfBatches
       steps:
         - - name: generate-batches
             template: generate-batches-template
+            arguments:
+              parameters:
+                - name: numOfBatches
+                  value: '{{inputs.parameters.numOfBatches}}'
         - - name: scan-web
             template: scan-web-template
             arguments:
@@ -20,12 +31,15 @@ spec:
             withParam: '{{steps.generate-batches.outputs.result}}'
 
     - name: generate-batches-template
+      inputs:
+        parameters:
+          - name: numOfBatches
       container:
         image: registry.digitalocean.com/scanweb/scanweb:latest
         command: ['/bin/sh', '-c']
         args:
           [
-            'sw prepare scan datastore --splitIntoBatches 4 -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb',
+            'sw prepare scan datastore --splitIntoBatches {{inputs.parameters.numOfBatches}} -s postgresql://scanweb:scanweb_password@scanweb-postgres.scanweb.svc.cluster.local:5433/scanweb',
           ]
 
     - name: scan-web-template

@@ -1,5 +1,5 @@
 import { CheckerValidation, textDecoder } from '../checker';
-import tryFetch from '../../../utils/try-fetch';
+import axios from 'axios';
 import ini from 'ini';
 import isCloneable from './is-cloneable';
 
@@ -16,8 +16,10 @@ const getGitRepo = async (url: string): Promise<string | undefined> => {
   let body: string | undefined = undefined;
   try {
     configUrl = `${getDotGitUrl(url)}/config`;
-    const response = await tryFetch(configUrl);
-    body = await response.text();
+    const response = await axios.get(configUrl, {
+      timeout: 5000,
+    });
+    body = response.data as string;
     return ini.parse(body)['remote "origin"'].url;
   } catch (err) {
     console.log(`Git confing could not be fetched: ${configUrl}`, body, err);
@@ -27,8 +29,10 @@ const getGitRepo = async (url: string): Promise<string | undefined> => {
 
 const isDirectoryExposed = async (url: string): Promise<boolean> => {
   try {
-    const response = await tryFetch(getDotGitUrl(url));
-    const body = await response.text();
+    const response = await axios.get(getDotGitUrl(url), {
+      timeout: 5000,
+    });
+    const body = response.data as string;
     return (
       body.includes('<html') &&
       body.includes('>HEAD<') &&
@@ -41,8 +45,7 @@ const isDirectoryExposed = async (url: string): Promise<boolean> => {
 
 export const git: CheckerValidation = async (ctx) => {
   if (ctx.body && ctx.body.length) {
-    const body = textDecoder.decode(ctx.body);
-    if (body.startsWith('ref:')) {
+    if (ctx.body.startsWith('ref:')) {
       const [directoryExposed, gitRepo] = await Promise.all([
         isDirectoryExposed(ctx.url),
         getGitRepo(ctx.url),

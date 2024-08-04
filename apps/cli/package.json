@@ -15,6 +15,7 @@
   "author": "Kamil Janowski <kgjanowski@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.3",
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0-rc.12",
     "ini": "^4.1.3",

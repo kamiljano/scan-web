@@ -1,4 +1,4 @@
-import tryFetch from '../../utils/try-fetch';
+import axios from 'axios';
 
 interface Collinfo {
   id: string;
@@ -11,13 +11,13 @@ interface Collinfo {
 
 export default async function getCommonCrawlOptions() {
   try {
-    const response = await tryFetch(
+    const response = await axios.get(
       'https://index.commoncrawl.org/collinfo.json',
       {
         timeout: 10_000,
       },
     );
-    const body = (await response.json()) as Collinfo[];
+    const body = response.data as Collinfo[];
 
     return body.map((info) => info.id);
   } catch (err) {

@@ -1,7 +1,7 @@
 import { startEta } from './eta';
 import { Store } from './store/store';
 import Batch from './utils/batch';
-import tryFetch from './utils/try-fetch';
+import axios from 'axios';
 
 interface CleanDbProps {
   store: Store;
@@ -27,7 +27,9 @@ export default async function cleanDb(props: CleanDbProps) {
     await Promise.all(
       sites.map(async (site) => {
         try {
-          await tryFetch(site.url);
+          await axios.get(site.url, {
+            timeout: 5000,
+          });
         } catch (e) {
           await batch.add([site.id]);
         }

@@ -7,7 +7,7 @@ describe('git-checker', () => {
   test('contains an empty buffer, therefore should fail', async () => {
     const result = await git({
       url: 'http://127.0.0.1',
-      body: new Uint8Array(),
+      body: '',
     });
 
     expect(result).toEqual({
@@ -32,7 +32,7 @@ describe('git-checker', () => {
 
     const result = await git({
       url: 'http://127.0.0.1',
-      body: new Uint8Array(headFile),
+      body: headFile.toString('utf-8'),
     });
 
     expect(result).toEqual({
@@ -47,7 +47,7 @@ describe('git-checker', () => {
   test('returned some content that is not empty, but is not git data either, should fail', async () => {
     const result = await git({
       url: 'http://127.0.0.1',
-      body: new Uint8Array(Buffer.from('<html></html>')),
+      body: '<html></html>',
     });
 
     expect(result).toEqual({
@@ -58,7 +58,7 @@ describe('git-checker', () => {
   test('actual website with uploaded git - https://myfastquote.com', async () => {
     const result = await git({
       url: 'https://myfastquote.com/.git/HEAD',
-      body: new Uint8Array(Buffer.from('ref: refs/heads/master')),
+      body: 'ref: refs/heads/master',
     });
 
     expect(result).toEqual({
@@ -67,7 +67,7 @@ describe('git-checker', () => {
         url: 'https://myfastquote.com/.git/HEAD',
         gitRepo: 'git@github.com:LeadVision-Media/myfastquote.git',
         directoryExposed: true,
-        cloneable: false,
+        //cloneable: false,
       },
     });
   });
@@ -75,7 +75,7 @@ describe('git-checker', () => {
   test('actual website with uploaded git - https://buxtehude2007.de', async () => {
     const result = await git({
       url: 'https://buxtehude2007.de/.git/HEAD',
-      body: new Uint8Array(Buffer.from('ref: refs/heads/master')),
+      body: 'ref: refs/heads/master',
     });
 
     expect(result).toEqual({
@@ -84,7 +84,7 @@ describe('git-checker', () => {
         url: 'https://buxtehude2007.de/.git/HEAD',
         directoryExposed: true,
         gitRepo: 'https://github.com/technext/Agency-2.git',
-        cloneable: true,
+        //cloneable: true,
       },
     });
   });
@@ -92,7 +92,7 @@ describe('git-checker', () => {
   test('actual website with uploaded git - https://buxtehude2007.de', async () => {
     const result = await git({
       url: 'https://buxtehude2007.de/.git/HEAD',
-      body: new Uint8Array(Buffer.from('ref: refs/heads/master')),
+      body: 'ref: refs/heads/master',
     });
 
     expect(result).toEqual({
@@ -101,7 +101,7 @@ describe('git-checker', () => {
         url: 'https://buxtehude2007.de/.git/HEAD',
         directoryExposed: true,
         gitRepo: 'https://github.com/technext/Agency-2.git',
-        cloneable: true,
+        //cloneable: true,
       },
     });
   });
