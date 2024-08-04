@@ -1,18 +1,19 @@
-import { setTimeout } from "node:timers/promises";
-import { load } from "cheerio";
-import path from "node:path";
-import Queue from "promise-queue";
-import * as fs from "node:fs";
-import { pipeline } from "node:stream/promises";
-import { spawnSync } from "node:child_process";
-import { waitForEmptyQueue } from "../../utils/queue-utils";
-import investigateProject from "../investigate-project/investigate-project";
-import printInvestigationReport from "../investigate-project/print-investigation-report";
-import tryFetch from "../../utils/try-fetch";
+import { setTimeout } from 'node:timers/promises';
+import { load } from 'cheerio';
+import path from 'node:path';
+import Queue from 'promise-queue';
+import * as fs from 'node:fs';
+import { pipeline } from 'node:stream/promises';
+import { spawnSync } from 'node:child_process';
+import { waitForEmptyQueue } from '../../utils/queue-utils';
+import investigateProject from '../investigate-project/investigate-project';
+import printInvestigationReport from '../investigate-project/print-investigation-report';
+import tryFetch from '../../utils/try-fetch';
 
 interface GitInvestigationProps {
   dotGitUrl: string;
   tempDir: string;
+  rm: boolean;
 }
 
 const reqHtml = async (url: string) => {
@@ -25,22 +26,22 @@ const reqHtml = async (url: string) => {
 async function* listFiles(gitRoot: string) {
   const $ = await reqHtml(gitRoot);
 
-  const links = $("a[href]").toArray();
+  const links = $('a[href]').toArray();
 
   for (const link of links) {
     const linkElement = $(link);
-    const href = linkElement.attr("href");
+    const href = linkElement.attr('href');
     const text = linkElement.text();
 
     if (
       href &&
-      !href.startsWith("?") &&
-      href !== "/" &&
-      !text.toLowerCase().includes("parent")
+      !href.startsWith('?') &&
+      href !== '/' &&
+      !text.toLowerCase().includes('parent')
     ) {
-      const fullPath = path.join(gitRoot, href).replace(":/", "://");
+      const fullPath = path.join(gitRoot, href).replace(':/', '://');
 
-      if (href.endsWith("/")) {
+      if (href.endsWith('/')) {
         yield* listFiles(fullPath);
       } else {
         yield fullPath;
@@ -50,7 +51,7 @@ async function* listFiles(gitRoot: string) {
 }
 
 const downloadFile = async (
-  props: Pick<GitInvestigationProps, "dotGitUrl" | "tempDir">,
+  props: Pick<GitInvestigationProps, 'dotGitUrl' | 'tempDir'>,
   file: string,
 ) => {
   console.log(`Downloading file ${file}`);
@@ -61,7 +62,7 @@ const downloadFile = async (
 
   const filePath = path.resolve(
     props.tempDir,
-    file.replace(props.dotGitUrl, "").replace(/^\//, ""),
+    file.replace(props.dotGitUrl, '').replace(/^\//, ''),
   );
 
   try {
@@ -85,8 +86,8 @@ const downloadGitRepo = async (props: GitInvestigationProps) => {
 
   const dotGitPath = path.resolve(
     props.tempDir,
-    props.dotGitUrl.replace(/\/.git$/, "").replace(/[:/]+/g, "_"),
-    ".git",
+    props.dotGitUrl.replace(/\/.git$/, '').replace(/[:/]+/g, '_'),
+    '.git',
   );
 
   await fs.promises.mkdir(dotGitPath, { recursive: true });
@@ -103,7 +104,7 @@ const downloadGitRepo = async (props: GitInvestigationProps) => {
   await waitForEmptyQueue(queue);
 
   const projectDir = path.dirname(dotGitPath);
-  spawnSync("git", ["reset", "--hard", "HEAD"], {
+  spawnSync('git', ['reset', '--hard', 'HEAD'], {
     cwd: projectDir,
   });
 
@@ -116,6 +117,10 @@ export default async function investigateGit(props: GitInvestigationProps) {
   const report = await investigateProject(projectDir);
   printInvestigationReport(report);
 
-  console.log("Done");
+  if (props.rm) {
+    await fs.promises.rm(projectDir, { recursive: true });
+  }
+
+  console.log('Done');
   return report;
 }

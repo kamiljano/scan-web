@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 import 'source-map-support/register';
-import yargs from 'yargs';
+import yargs, { boolean } from 'yargs';
 import { CheckerMap, checkerMap } from './scan/checkers';
 import { stores } from './store';
 import investigateGit from './investigate/git/investigate-git';
@@ -141,12 +141,19 @@ const generateInvestigation = (args: yargs.Argv<{}>) => {
             default: './temp',
             array: false,
           },
+          rm: {
+            describe:
+              'If defined, the temporary directory will be removed after the analysis',
+            type: 'boolean',
+            default: false,
+          },
         });
       },
       async (gitArgs) => {
         await investigateGit({
           dotGitUrl: gitArgs.dotGitUrl,
           tempDir: gitArgs.tempDir,
+          rm: gitArgs.rm,
         });
       },
     )
